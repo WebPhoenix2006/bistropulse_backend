@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = ['your-app-name.onrender.com', 'localhost']
+ALLOWED_HOSTS = ['https://bistropulse-backend.onrender.com/', 'localhost']
 
 # Static files
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
