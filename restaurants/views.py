@@ -8,14 +8,14 @@ class RestaurantListCreateView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Restaurant.objects.filter(owner=self.request.user)
+        return Restaurant.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(user=self.request.user)
 
 class RestaurantDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = RestaurantSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Restaurant.objects.filter(owner=self.request.user)
+        return Restaurant.objects.filter(user=self.request.user)
