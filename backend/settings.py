@@ -25,9 +25,14 @@ ALLOWED_HOSTS = ['bistropulse-backend.onrender.com', 'localhost']
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 
+
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+
+# Development fallback
 if not SECRET_KEY:
-    raise Exception("DJANGO_SECRET_KEY environment variable is missing!")
+    DEBUG = True  # optional: ensure DEBUG is true in dev
+    print("⚠️ Warning: Using default secret key for development.")
+    SECRET_KEY = "dev-secret-key-please-change-this"
 
 
 # Application definition
@@ -43,6 +48,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'authapp',
+    'restaurants',
+    'users',
 ]
 
 MIDDLEWARE = [
