@@ -25,6 +25,10 @@ ALLOWED_HOSTS = ['your-app-name.onrender.com', 'localhost']
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    raise Exception("DJANGO_SECRET_KEY environment variable is missing!")
+
 
 # Application definition
 
