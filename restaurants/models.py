@@ -22,7 +22,7 @@ class Restaurant(models.Model):
     name = models.CharField(max_length=255)
     representative = models.CharField(max_length=255)
     phone = models.CharField(max_length=20)
-    business_license = models.FileField(upload_to='licenses/')
+    business_license = models.FileField(upload_to='licenses/', null=True, blank=True)
     owner_nid = models.FileField(upload_to='nid/')
     established_date = models.DateField()
     working_period = models.CharField(max_length=30)
