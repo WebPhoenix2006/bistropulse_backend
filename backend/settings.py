@@ -24,6 +24,9 @@ ALLOWED_HOSTS = ['bistropulse-backend.onrender.com', 'localhost']
 # Static files
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
