@@ -4,7 +4,18 @@ from .models import Restaurant
 class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
-        exclude = ['user', 'id']  # id is auto-generated, user set in the view
-
-    def create(self, validated_data):
-        return Restaurant.objects.create(**validated_data)
+        fields = [
+            'id',  
+            'name',
+            'representative',
+            'phone',
+            'business_license',
+            'owner_nid',
+            'established_date',
+            'working_period',
+            'large_option',
+            'location',
+            'restaurant_image',
+            'rating',
+            'status',
+        ]
