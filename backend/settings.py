@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'authapp',
     'restaurants',
+    'customers',
     'users',
 ]
 
