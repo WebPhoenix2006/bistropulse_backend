@@ -6,7 +6,7 @@ from .serializers import CustomerSerializer
 
 class CustomerListCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
         customers = Customer.objects.filter(user=request.user)
         serializer = CustomerSerializer(customers, many=True, context={"request": request})
