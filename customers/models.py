@@ -11,7 +11,7 @@ def generate_customer_id():
 
 class Customer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customers')  # <--- Add this line
-    customer_id = models.CharField(max_length=10, unique=True, blank=True)
+    customer_id = models.CharField(max_length=20, unique=True, blank=True)
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
