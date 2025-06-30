@@ -14,9 +14,10 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     def get_photo_url(self, obj):
         request = self.context.get('request')
-        if obj.photo and request:
+        if obj.photo and hasattr(obj.photo, 'url') and request:
             return request.build_absolute_uri(obj.photo.url)
         return None
+
 
     def create(self, validated_data):
         print("Incoming FILES:", self.context['request'].FILES)  # <- check if 'photo' is present
