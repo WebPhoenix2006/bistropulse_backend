@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
@@ -10,17 +9,12 @@ class CustomerListCreateView(APIView):
     
     def get(self, request):
         customers = Customer.objects.filter(user=request.user)
-        seriaizer = CustomerSerializer(customers, many=True)
-        return Response(seriaizer.data)
-    
+        serializer = CustomerSerializer(customers, many=True, context={"request": request})
+        return Response(serializer.data)
+
     def post(self, request):
-        serializer = CustomerSerializer(data=request.data)
+        serializer = CustomerSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def get(self, request):
-        customers = Customer.objects.all()
-        serializer = CustomerSerializer(customers, many=True, context={"request": request})
-        return Response(serializer.data)
