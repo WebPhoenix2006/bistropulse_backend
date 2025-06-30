@@ -11,6 +11,9 @@ class CustomerSerializer(serializers.ModelSerializer):
             'is_student', 'gender', 'location', 'photo', 'created_at'
         ]
         read_only_fields = ['customer_id', 'created_at', 'photo']
+        extra_kwargs = {
+            'user': {'write_only': False}  # ensure it's not allowed via payload
+        }
 
     def get_photo(self, obj):
         request = self.context.get('request')
@@ -19,6 +22,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         return None
 
     def create(self, validated_data):
-        user = self.context['request'].user  # get user from request
-        customer = Customer.objects.create(user=user, **validated_data)
-        return customer
+        user = self.context['request'].user
+        validated_data.pop('user', None)  # prevent double 'user' assignment
+        return Customer.objects.create(user=user, **validated_data)
+
