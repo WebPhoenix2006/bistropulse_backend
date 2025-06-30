@@ -10,6 +10,7 @@ def generate_customer_id():
     return f'{prefix}{suffix}'
 
 class Customer(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customers')  # <--- Add this line
     customer_id = models.CharField(max_length=10, unique=True, blank=True)
     name = models.CharField(max_length=100)
     email = models.EmailField()
@@ -22,13 +23,9 @@ class Customer(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.customer_id:
-            # Ensure uniqueness
             while True:
                 new_id = generate_customer_id()
                 if not Customer.objects.filter(customer_id=new_id).exists():
                     self.customer_id = new_id
                     break
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.customer_id} - {self.name}"
