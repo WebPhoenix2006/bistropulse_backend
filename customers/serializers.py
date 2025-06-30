@@ -10,7 +10,6 @@ class CustomerSerializer(serializers.ModelSerializer):
             'id', 'customer_id', 'name', 'email', 'phone',
             'is_student', 'gender', 'location', 'photo', 'created_at'
         ]
-        exclude = ['user']
 
     def get_photo(self, obj):
         request = self.context.get('request')
