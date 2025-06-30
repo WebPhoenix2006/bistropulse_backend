@@ -18,6 +18,11 @@ class CustomerListCreateView(APIView):
     def post(self, request):
         serializer = CustomerSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            customer = serializer.save(user=request.user)
+            
+            # ✅ Re-serialize the saved instance so `photo_url` is generated
+            response_serializer = CustomerSerializer(customer, context={"request": request})
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
