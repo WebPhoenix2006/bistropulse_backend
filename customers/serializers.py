@@ -14,9 +14,16 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     def get_photo_url(self, obj):
         request = self.context.get('request')
+        if not obj.photo:
+            print("No photo saved for this object")
+        if not hasattr(obj.photo, 'url'):
+            print("Photo object has no URL")
+        if not request:
+            print("No request in serializer context")
         if obj.photo and hasattr(obj.photo, 'url') and request:
             return request.build_absolute_uri(obj.photo.url)
         return None
+
 
 
     def create(self, validated_data):
