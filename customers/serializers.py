@@ -19,6 +19,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         return None
 
     def create(self, validated_data):
+        print("Incoming FILES:", self.context['request'].FILES)  # <- check if 'photo' is present
         user = self.context['request'].user
         validated_data.pop('user', None)
         return Customer.objects.create(user=user, **validated_data)

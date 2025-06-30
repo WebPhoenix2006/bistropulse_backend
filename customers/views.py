@@ -4,8 +4,11 @@ from rest_framework import status, permissions
 from .models import Customer
 from .serializers import CustomerSerializer
 
+from rest_framework.parsers import MultiPartParser, FormParser
+
 class CustomerListCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]  # Allow file upload
 
     def get(self, request):
         customers = Customer.objects.filter(user=request.user)
