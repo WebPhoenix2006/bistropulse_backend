@@ -19,10 +19,13 @@ class CustomerListCreateView(APIView):
         serializer = CustomerSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             customer = serializer.save(user=request.user)
-            
-            # ✅ Re-serialize the saved instance so `photo_url` is generated
+
+            # ✅ Ensure the customer now has a file
+            print("✔️ File saved at:", customer.photo)
+
+            # Re-serialize AFTER saving
             response_serializer = CustomerSerializer(customer, context={"request": request})
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
