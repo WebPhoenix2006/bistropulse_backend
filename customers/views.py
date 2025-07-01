@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from .models import Customer
 from .serializers import CustomerSerializer
+from rest_framework.pagination import PageNumberPagination
 
 from rest_framework.parsers import MultiPartParser, FormParser
 
@@ -12,8 +13,11 @@ class CustomerListCreateView(APIView):
 
     def get(self, request):
         customers = Customer.objects.filter(user=request.user)
-        serializer = CustomerSerializer(customers, many=True, context={"request": request})
-        return Response(serializer.data)
+        paginator = PageNumberPagination()
+        paginated_customers = paginator.paginate_queryset(customers, request)
+        serializer = CustomerSerializer(paginated_customers, many=True, context={"request": request})
+        return paginator.get_paginated_response(serializer.data)
+
 
     def post(self, request):
         serializer = CustomerSerializer(data=request.data, context={"request": request})
