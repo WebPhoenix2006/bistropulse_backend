@@ -15,10 +15,21 @@ class CustomerListCreateView(APIView):
 
     def get(self, request):
         customers = Customer.objects.filter(user=request.user)
+        
+        # Add pagination with error handling
         paginator = PageNumberPagination()
-        paginated_customers = paginator.paginate_queryset(customers, request)
-        serializer = CustomerSerializer(paginated_customers, many=True, context={"request": request})
-        return paginator.get_paginated_response(serializer.data)
+        paginator.page_size = 10  # Explicit page size
+        
+        try:
+            paginated_customers = paginator.paginate_queryset(customers, request)
+            serializer = CustomerSerializer(paginated_customers, many=True, context={"request": request})
+            return paginator.get_paginated_response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"error": "Invalid page request"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
     def post(self, request):
         serializer = CustomerSerializer(data=request.data, context={"request": request})

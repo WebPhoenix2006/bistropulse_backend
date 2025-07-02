@@ -26,6 +26,10 @@ services:
         value: True
       - key: DJANGO_SECRET_KEY
         generateValue: true
+      - key: DATA_UPLOAD_MAX_MEMORY_SIZE
+        value: "10485760"  # 10MB in bytes
+      - key: FILE_UPLOAD_MAX_MEMORY_SIZE
+        value: "10485760"
     
     # File handling
     disk:
