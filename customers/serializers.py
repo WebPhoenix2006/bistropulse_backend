@@ -13,14 +13,10 @@ class CustomerSerializer(serializers.ModelSerializer):
         read_only_fields = ['customer_id', 'created_at', 'photo_url']
 
     def get_photo_url(self, obj):
-        request = self.context.get('request')
-        try:
-            if obj.photo and obj.photo.name and request:
-                return request.build_absolute_uri(obj.photo.url)
-        except ValueError:
-            # Photo field is set but file is missing — avoid crashing
-            return None
+        if obj.photo:
+            return self.context['request'].build_absolute_uri(obj.photo.url)
         return None
+
 
 
 
