@@ -2,25 +2,38 @@ services:
   - type: web
     name: bistropulse_backend
     env: python
+    region: singapore  # Choose your preferred region
+    plan: free
+    autoDeploy: true
+    
+    # Build commands
     buildCommand: |
-      pip install -r requirements.txt &&
+      pip install -r requirements.txt
       python manage.py collectstatic --noinput
+    
+    # Startup commands
     startCommand: |
+      mkdir -p /var/data/media &&
+      chmod -R 755 /var/data &&
       python manage.py migrate &&
       gunicorn backend.wsgi:application
+    
+    # Environment variables
     envVars:
-      - key: DJANGO_SECRET_KEY
-        generateValue: true
       - key: DEBUG
         value: False
-      - key: AWS_ACCESS_KEY_ID
-        fromSecret: true
-      - key: AWS_SECRET_ACCESS_KEY
-        fromSecret: true
-      - key: AWS_STORAGE_BUCKET_NAME
-        fromSecret: true
-      - key: AWS_S3_REGION_NAME
-        fromSecret: true
+      - key: RENDER
+        value: True
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+    
+    # File handling
+    disk:
+      name: media_volume
+      mountPath: /var/data
+      sizeGB: 1  # Free tier limit
+    
+    # URL routing
     routes:
       - type: rewrite
         source: /media/(.*)
@@ -28,6 +41,7 @@ services:
       - type: rewrite
         source: /static/(.*)
         destination: /static/$1
+    
+    # Health check
     healthCheckPath: /api/health/
-    plan: free
-    autoDeploy: true
+    healthCheckTimeout: 90
