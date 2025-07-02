@@ -33,3 +33,13 @@ class CustomerListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CustomerDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            customer = Customer.objects.get(pk=pk, user=request.user)
+            serializer = CustomerSerializer(customer, context={"request": request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Customer.DoesNotExist:
+            return Response({'detail': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
