@@ -2,23 +2,20 @@ services:
   - type: web
     name: bistropulse_backend
     env: python
-    region: singapore  # Choose your preferred region
+    region: singapore
     plan: free
     autoDeploy: true
     
-    # Build commands
     buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
     
-    # Startup commands
     startCommand: |
-      mkdir -p /var/data/media &&
-      chmod -R 755 /var/data &&
-      python manage.py migrate &&
+      mkdir -p /var/data/media
+      chmod -R 755 /var/data
+      python manage.py migrate
       gunicorn backend.wsgi:application
     
-    # Environment variables
     envVars:
       - key: DEBUG
         value: False
@@ -27,17 +24,15 @@ services:
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DATA_UPLOAD_MAX_MEMORY_SIZE
-        value: "10485760"  # 10MB in bytes
+        value: "10485760"
       - key: FILE_UPLOAD_MAX_MEMORY_SIZE
         value: "10485760"
     
-    # File handling
     disk:
       name: media_volume
       mountPath: /var/data
-      sizeGB: 1  # Free tier limit
+      sizeGB: 1
     
-    # URL routing
     routes:
       - type: rewrite
         source: /media/(.*)
@@ -46,6 +41,5 @@ services:
         source: /static/(.*)
         destination: /static/$1
     
-    # Health check
     healthCheckPath: /api/health/
     healthCheckTimeout: 90

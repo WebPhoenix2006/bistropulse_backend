@@ -11,18 +11,20 @@ from django.http import JsonResponse
 
 class CustomerListCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]  # Allow file upload
+    parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
         customers = Customer.objects.filter(user=request.user)
-        
-        # Add pagination with error handling
         paginator = PageNumberPagination()
-        paginator.page_size = 10  # Explicit page size
+        paginator.page_size = 10
         
         try:
             paginated_customers = paginator.paginate_queryset(customers, request)
-            serializer = CustomerSerializer(paginated_customers, many=True, context={"request": request})
+            serializer = CustomerSerializer(
+                paginated_customers, 
+                many=True, 
+                context={"request": request}
+            )
             return paginator.get_paginated_response(serializer.data)
         except Exception as e:
             return Response(
@@ -30,25 +32,36 @@ class CustomerListCreateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
     def post(self, request):
-        serializer = CustomerSerializer(data=request.data, context={"request": request})
-        if serializer.is_valid():
-            customer = serializer.save(user=request.user)
+        try:
+            if 'photo' in request.FILES:
+                if request.FILES['photo'].size > 10 * 1024 * 1024:
+                    return Response(
+                        {"error": "File size exceeds 10MB limit"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             
-            # Debugging prints
-            if customer.photo:  # Check if photo exists
-                print("✔️ File saved at:", customer.photo.path)
-                print("✔️ File exists:", os.path.exists(customer.photo.path))
-                print("✔️ File URL:", customer.photo.url)
-                print("✔️ Absolute URL:", request.build_absolute_uri(customer.photo.url))
-            else:
-                print("⚠️ No photo was saved")
+            serializer = CustomerSerializer(
+                data=request.data, 
+                context={"request": request}
+            )
             
-            # Return the serialized data with photo_url
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                customer = serializer.save(user=request.user)
+                
+                if customer.photo:
+                    print(f"✔️ File saved to: {customer.photo.path}")
+                    print(f"✔️ Accessible at: {request.build_absolute_uri(customer.photo.url)}")
+                
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class CustomerDetailView(APIView):
@@ -60,8 +73,11 @@ class CustomerDetailView(APIView):
             serializer = CustomerSerializer(customer, context={"request": request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Customer.DoesNotExist:
-            return Response({'detail': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
-        
+            return Response(
+                {'detail': 'Customer not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 def health_check(request):
     return JsonResponse({"status": "ok"})
