@@ -2,16 +2,25 @@ services:
   - type: web
     name: bistropulse_backend
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput
     startCommand: |
       python manage.py migrate &&
-      python manage.py collectstatic --noinput &&
       gunicorn backend.wsgi:application
     envVars:
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DEBUG
         value: False
+      - key: AWS_ACCESS_KEY_ID
+        fromSecret: true
+      - key: AWS_SECRET_ACCESS_KEY
+        fromSecret: true
+      - key: AWS_STORAGE_BUCKET_NAME
+        fromSecret: true
+      - key: AWS_S3_REGION_NAME
+        fromSecret: true
     routes:
       - type: rewrite
         source: /media/(.*)
@@ -19,3 +28,6 @@ services:
       - type: rewrite
         source: /static/(.*)
         destination: /static/$1
+    healthCheckPath: /api/health/
+    plan: free
+    autoDeploy: true
