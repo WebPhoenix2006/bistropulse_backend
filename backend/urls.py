@@ -12,11 +12,5 @@ urlpatterns = [
 
     # Health check endpoint for Render
     path('api/health/', TemplateView.as_view(template_name='health_check.html'), name='health-check'),
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# Static & Media files
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-# Always serve media (even in production)
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
