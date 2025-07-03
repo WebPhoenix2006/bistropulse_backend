@@ -2,11 +2,11 @@ import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from .models import Customer
+from .serializers import CustomerSerializer
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.http import JsonResponse
-from .models import Customer
-from .serializers import CustomerSerializer
 
 
 class CustomerListCreateView(APIView):
@@ -21,12 +21,14 @@ class CustomerListCreateView(APIView):
         try:
             paginated_customers = paginator.paginate_queryset(customers, request)
             serializer = CustomerSerializer(
-                paginated_customers, many=True, context={"request": request}
+                paginated_customers, 
+                many=True, 
+                context={"request": request}
             )
             return paginator.get_paginated_response(serializer.data)
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Invalid page request"},
+                {"error": "Invalid page request"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -40,7 +42,7 @@ class CustomerListCreateView(APIView):
                     )
 
             serializer = CustomerSerializer(
-                data=request.data,
+                data=request.data, 
                 context={"request": request}
             )
 
@@ -66,47 +68,31 @@ class CustomerDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    def get(self, request, pk):
+    def get_object(self, customer_id, user):
         try:
-            customer = Customer.objects.get(pk=pk, user=request.user)
-            serializer = CustomerSerializer(customer, context={"request": request})
+            return Customer.objects.get(customer_id=customer_id, user=user)
+        except Customer.DoesNotExist:
+            return None
+
+    def get(self, request, customer_id):
+        customer = self.get_object(customer_id, request.user)
+        if not customer:
+            return Response({'detail': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CustomerSerializer(customer, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, customer_id):
+        customer = self.get_object(customer_id, request.user)
+        if not customer:
+            return Response({'detail': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CustomerSerializer(customer, data=request.data, partial=True, context={"request": request})
+        if serializer.is_valid():
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except Customer.DoesNotExist:
-            return Response(
-                {'detail': 'Customer not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
 
-    def put(self, request, pk):
-        try:
-            customer = Customer.objects.get(pk=pk, user=request.user)
-
-            serializer = CustomerSerializer(
-                customer,
-                data=request.data,
-                partial=True,  # allows partial update
-                context={"request": request}
-            )
-
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        except Customer.DoesNotExist:
-            return Response(
-                {'detail': 'Customer not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def patch(self, request, pk):
-        return self.put(request, pk)  # alias for partial update
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def health_check(request):
