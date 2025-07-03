@@ -5,7 +5,7 @@ import random
 import string
 
 def generate_customer_id():
-    prefix = 'user#'
+    prefix = 'user_'
     suffix = ''.join(random.choices(string.digits, k=6))
     return f'{prefix}{suffix}'
 
