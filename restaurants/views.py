@@ -1,4 +1,7 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated
+
 from .models import Restaurant, Food, Extra, FoodCategory
 from .serializers import (
     RestaurantSerializer,
@@ -6,9 +9,6 @@ from .serializers import (
     ExtraSerializer,
     FoodCategorySerializer,
 )
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework import generics, permissions
 
 
 class RestaurantListCreateView(ListCreateAPIView):
@@ -23,31 +23,39 @@ class RestaurantListCreateView(ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 
-class FoodCategoryListCreateView(generics.ListCreateAPIView):
+class FoodCategoryListCreateView(ListCreateAPIView):
     serializer_class = FoodCategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return FoodCategory.objects.filter(restaurant__user=self.request.user)
 
     def perform_create(self, serializer):
         restaurant_id = self.request.data.get("restaurant_id")
+        if not restaurant_id:
+            raise serializers.ValidationError("restaurant_id is required")
         serializer.save(restaurant_id=restaurant_id)
 
 
-class ExtraListCreateView(generics.ListCreateAPIView):
+class ExtraListCreateView(ListCreateAPIView):
     queryset = Extra.objects.all()
     serializer_class = ExtraSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
 
-class FoodListCreateView(generics.ListCreateAPIView):
+class FoodListCreateView(ListCreateAPIView):
     serializer_class = FoodSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
         return Food.objects.filter(restaurant__user=self.request.user)
 
     def perform_create(self, serializer):
         restaurant_id = self.request.data.get("restaurant")
-        serializer.save(restaurant_id=restaurant_id)
+        category_id = self.request.data.get("category")
+
+        if not restaurant_id:
+            raise serializers.ValidationError("restaurant is required")
+
+        serializer.save(restaurant_id=restaurant_id, category_id=category_id)
