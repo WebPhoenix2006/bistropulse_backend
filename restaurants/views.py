@@ -1,3 +1,5 @@
+from rest_framework import serializers
+
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
