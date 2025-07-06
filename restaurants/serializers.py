@@ -68,3 +68,25 @@ class FoodSerializer(serializers.ModelSerializer):
             "extras",
             "restaurant",
         ]
+
+
+def get_categories(self, obj):
+    return (
+        FoodCategorySerializer(obj.categories.all(), many=True).data
+        if obj.categories.exists()
+        else []
+    )
+
+
+def get_foods(self, obj):
+    return (
+        FoodCategory(obj.categories.all(), many=True).data
+        if obj.categories.exists()
+        else []
+    )
+
+
+def get_extras(self, obj):
+    return (
+        Extra(obj.categories.all(), many=True).data if obj.categories.exists() else []
+    )
