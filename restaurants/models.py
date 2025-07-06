@@ -78,3 +78,16 @@ class Food(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.restaurant.name})"
+
+
+class Review(models.Model):
+    restaurant = models.ForeignKey(
+        "Restaurant", related_name="reviews", on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.TextField()
+    rating = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} - {self.restaurant.name} ({self.rating})"

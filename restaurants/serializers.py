@@ -1,10 +1,43 @@
 from rest_framework import serializers
-from .models import Restaurant, FoodCategory, Food, Review
-from .serializers import (
-    FoodCategorySerializer,
-    FoodSerializer,
-    ReviewSerializer,
-)  # Assume these exist
+from .models import Restaurant, FoodCategory, Food, Extra, Review
+
+
+class ExtraSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Extra
+        fields = ["id", "name", "price"]
+
+
+class FoodCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FoodCategory
+        fields = ["id", "name", "restaurant"]
+
+
+class FoodSerializer(serializers.ModelSerializer):
+    extras = ExtraSerializer(many=True, read_only=True)
+    category = FoodCategorySerializer(read_only=True)
+
+    class Meta:
+        model = Food
+        fields = [
+            "id",
+            "restaurant",
+            "category",
+            "name",
+            "description",
+            "price",
+            "image",
+            "extras",
+        ]
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ["id", "user", "comment", "rating", "created_at"]
 
 
 class RestaurantSerializer(serializers.ModelSerializer):
@@ -42,16 +75,12 @@ class RestaurantSerializer(serializers.ModelSerializer):
 
     def get_categories(self, obj):
         categories = obj.categories.all()
-        return (
-            FoodCategorySerializer(categories, many=True).data
-            if categories.exists()
-            else []
-        )
+        return FoodCategorySerializer(categories, many=True).data
 
     def get_foods(self, obj):
         foods = obj.foods.all()
-        return FoodSerializer(foods, many=True).data if foods.exists() else []
+        return FoodSerializer(foods, many=True).data
 
     def get_reviews(self, obj):
         reviews = obj.reviews.all()
-        return ReviewSerializer(reviews, many=True).data if reviews.exists() else []
+        return ReviewSerializer(reviews, many=True).data
