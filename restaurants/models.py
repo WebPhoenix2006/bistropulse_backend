@@ -1,4 +1,3 @@
-# models.py
 import random
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -47,25 +46,19 @@ class Restaurant(models.Model):
 
 class FoodCategory(models.Model):
     restaurant = models.ForeignKey(
-        "Restaurant", related_name="categories", on_delete=models.CASCADE
+        Restaurant, related_name="categories", on_delete=models.CASCADE
     )
     name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.name} ({self.restaurant.name})"
 
 
 class Extra(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=8, decimal_places=2)
 
-    def __str__(self):
-        return f"{self.name} (+₦{self.price})"
-
 
 class Food(models.Model):
     restaurant = models.ForeignKey(
-        "Restaurant", related_name="foods", on_delete=models.CASCADE
+        Restaurant, related_name="foods", on_delete=models.CASCADE
     )
     category = models.ForeignKey(
         FoodCategory, related_name="foods", on_delete=models.SET_NULL, null=True
@@ -76,18 +69,12 @@ class Food(models.Model):
     image = models.ImageField(upload_to="food_images/", blank=True, null=True)
     extras = models.ManyToManyField(Extra, blank=True, related_name="foods")
 
-    def __str__(self):
-        return f"{self.name} ({self.restaurant.name})"
-
 
 class Review(models.Model):
     restaurant = models.ForeignKey(
-        "Restaurant", related_name="reviews", on_delete=models.CASCADE
+        Restaurant, related_name="reviews", on_delete=models.CASCADE
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.TextField()
     rating = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user} - {self.restaurant.name} ({self.rating})"
