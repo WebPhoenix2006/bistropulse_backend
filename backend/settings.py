@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "restaurants",
     "customers",
     "users",
+    "chat",
 ]
 
 MIDDLEWARE = [

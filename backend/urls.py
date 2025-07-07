@@ -9,6 +9,8 @@ urlpatterns = [
     path('api/auth/', include('authapp.urls')),
     path('api/restaurants/', include('restaurants.urls')),
     path('api/customers/', include('customers.urls')),
+    path('api/chat/', include('chat.urls')),
+
 
     # Health check endpoint for Render
     path('api/health/', TemplateView.as_view(template_name='health_check.html'), name='health-check'),
