@@ -1,35 +1,37 @@
 from rest_framework import serializers
 from .models import User, RoleOTP
 
+
 class SignupSerializer(serializers.ModelSerializer):
-    otp_code = serializers.CharField(write_only=True)  # input only
+    otp_code = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'otp_code', 'phone', 'fullname']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
+        fields = ["username", "email", "password", "otp_code", "phone", "fullname"]
+        extra_kwargs = {"password": {"write_only": True}}
 
     def validate_otp_code(self, value):
         try:
-            role_otp = RoleOTP.objects.get(otp=value)
-            self.role = role_otp.role  # stash it
+            role_otp = RoleOTP.objects.get(otp=value, is_used=False)
+            self.role = role_otp
             return value
         except RoleOTP.DoesNotExist:
             raise serializers.ValidationError("Invalid or expired OTP code.")
 
     def create(self, validated_data):
-        validated_data.pop('otp_code')  # remove from data
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email'),
-            password=validated_data['password'],
-            role=self.role
-        )
-        return user
+        validated_data.pop("otp_code")
 
-class RoleOTPSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RoleOTP
-        fields = '__all__'
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            email=validated_data.get("email"),
+            password=validated_data["password"],
+            phone=validated_data.get("phone"),
+            fullname=validated_data.get("fullname"),
+            role=self.role.role,  # access role from RoleOTP
+        )
+
+        # Mark the OTP as used
+        self.role.is_used = True
+        self.role.save()
+
+        return user
