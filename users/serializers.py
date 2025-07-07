@@ -30,8 +30,14 @@ class SignupSerializer(serializers.ModelSerializer):
             role=self.role.role,  # access role from RoleOTP
         )
 
-        # Mark the OTP as used
         self.role.is_used = True
         self.role.save()
 
         return user
+
+
+# ✅ Add this to fix the ImportError
+class RoleOTPSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoleOTP
+        fields = "__all__"
