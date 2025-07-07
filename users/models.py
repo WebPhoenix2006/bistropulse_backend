@@ -15,3 +15,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.role})"
+
+class RoleOTP(models.Model):
+    otp = models.CharField(max_length=10, unique=True)
+    role = models.CharField(max_length=20, choices=User.ROLE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.otp} → {self.role}"
+
