@@ -16,7 +16,7 @@ class RegisterView(APIView):
             token = Token.objects.create(user=user)
             return Response({'token': token.key}, status=status.HTTP_201_CREATED)
         print(request.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'token': token.key, 'user': {'username': user.username, 'role': user.role}}, status=status.HTTP_201_CREATED)
     
 class LoginView(APIView):
     permission_classes = [AllowAny]
