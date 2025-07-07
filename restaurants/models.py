@@ -1,6 +1,8 @@
 import random
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.conf import settings
+
 
 User = get_user_model()
 
@@ -20,7 +22,7 @@ class Restaurant(models.Model):
         editable=False,
         default=generate_unique_id,
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="restaurants")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='restaurants')
     name = models.CharField(max_length=255, null=True, blank=True)
     representative = models.CharField(max_length=255, null=True, blank=True)
     phone = models.CharField(max_length=20)

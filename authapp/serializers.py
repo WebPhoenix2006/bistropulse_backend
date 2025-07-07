@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from users.models import User, RoleOTP  # 👈 Import your models
+from users.models import User  # 👈 Import your models
 
 
 class RegisterSerializer(serializers.ModelSerializer):

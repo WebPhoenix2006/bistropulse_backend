@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+
 
 import random
 import string
@@ -10,7 +12,7 @@ def generate_customer_id():
     return f'{prefix}{suffix}'
 
 class Customer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customers')  # <--- Add this line
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='customers')
     customer_id = models.CharField(max_length=20, unique=True, blank=True)
     name = models.CharField(max_length=100)
     email = models.EmailField()
