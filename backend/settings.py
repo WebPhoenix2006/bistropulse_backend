@@ -26,6 +26,10 @@ else:
 MEDIA_URL = "/media/"
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+# settings.py
+
+TIME_ZONE = "Africa/Lagos"
+USE_TZ = True  # This is fine. Leave as True if you want UTC in DB
 
 # Application definition
 INSTALLED_APPS = [
@@ -87,9 +91,7 @@ WSGI_APPLICATION = "backend.wsgi.application"
 RENDER = os.environ.get("RENDER")
 
 if RENDER:
-    DATABASES = {
-        "default": dj_database_url.config(conn_max_age=600)
-    }
+    DATABASES = {"default": dj_database_url.config(conn_max_age=600)}
 else:
     DATABASES = {
         "default": {
@@ -97,7 +99,6 @@ else:
             "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
         }
     }
-
 
 
 # Security for production
@@ -116,6 +117,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,  # Customize page size
+    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",  # ISO-like readable format
 }
 
 
