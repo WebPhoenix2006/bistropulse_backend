@@ -19,6 +19,7 @@ class RegisterView(APIView):
                 {
                     "token": token.key,
                     "user": {
+                        "id": user.id,  # ✅ add this
                         "username": user.username,
                         "role": user.role,
                     },
@@ -43,6 +44,7 @@ class LoginView(APIView):
                 {
                     "token": token.key,
                     "user": {
+                        "id": user.id,  # ✅ add this
                         "username": user.username,
                         "role": user.role,
                     },
@@ -53,3 +55,4 @@ class LoginView(APIView):
         return Response(
             {"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED
         )
+
