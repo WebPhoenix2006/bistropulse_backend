@@ -5,17 +5,17 @@ services:
     region: singapore
     plan: free
     autoDeploy: true
-    
+
     buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
-    
+
     startCommand: |
       mkdir -p /var/data/media
       chmod -R 755 /var/data
       python manage.py migrate
       gunicorn backend.wsgi:application
-    
+
     envVars:
       - key: DEBUG
         value: False
@@ -27,12 +27,14 @@ services:
         value: "10485760"
       - key: FILE_UPLOAD_MAX_MEMORY_SIZE
         value: "10485760"
-    
+      - key: DATABASE_URL
+        value: postgresql://bistropulse_db_user:5ONLH0AuW6VFPOXbkYTXoCYpeRCffTdR@dpg-d1f3vtqdbo4c739iik7g-a/bistropulse_db
+
     disk:
       name: media_volume
       mountPath: /var/data
       sizeGB: 1
-    
+
     routes:
       - type: rewrite
         source: /media/(.*)
@@ -40,6 +42,6 @@ services:
       - type: rewrite
         source: /static/(.*)
         destination: /static/$1
-    
+
     healthCheckPath: /api/health/
     healthCheckTimeout: 90
