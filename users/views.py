@@ -6,6 +6,17 @@ from rest_framework.authtoken.models import Token
 
 from users.models import RoleOTP
 from users.serializers import RoleOTPSerializer, SignupSerializer
+from .models import User
+from .serializers import UserSerializer  # create this if it doesn't exist
+
+
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.exclude(id=self.request.user.id)
 
 
 class RegisterView(APIView):

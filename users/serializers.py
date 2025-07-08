@@ -41,3 +41,9 @@ class RoleOTPSerializer(serializers.ModelSerializer):
     class Meta:
         model = RoleOTP
         fields = "__all__"
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role']
