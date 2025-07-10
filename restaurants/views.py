@@ -18,6 +18,9 @@ class RestaurantListCreateView(generics.ListCreateAPIView):
         return Restaurant.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
+        print("🔍 Incoming FILES:", self.request.FILES)
+        print("📥 restaurant_image:", self.request.FILES.get("restaurant_image"))
+        print("📤 DATA:", self.request.data)
         serializer.save(user=self.request.user)
 
     def get_serializer_context(self):
