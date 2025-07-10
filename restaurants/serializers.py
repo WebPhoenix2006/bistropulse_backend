@@ -30,6 +30,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class RestaurantSerializer(serializers.ModelSerializer):
     restaurant_image_url = serializers.SerializerMethodField()
+    restaurant_image = serializers.ImageField(required=False)  # ✅ Add this
     categories = FoodCategorySerializer(many=True, read_only=True)
     foods = FoodSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
@@ -47,7 +48,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
             "working_period",
             "large_option",
             "location",
-            "restaurant_image_url",
+            "restaurant_image",  # ✅ Add this line
+            "restaurant_image_url",  # This one stays for the frontend
             "rating",
             "status",
             "categories",
