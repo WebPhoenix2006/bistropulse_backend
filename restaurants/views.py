@@ -24,9 +24,10 @@ class RestaurantListCreateView(generics.ListCreateAPIView):
         return {"request": self.request}
 
 
-class RestaurantDetailView(generics.RetrieveAPIView):
+class RestaurantRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RestaurantSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
         return Restaurant.objects.filter(user=self.request.user)
