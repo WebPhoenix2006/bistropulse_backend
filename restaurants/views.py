@@ -20,6 +20,20 @@ class RestaurantListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+
+class RestaurantDetailView(generics.RetrieveAPIView):
+    serializer_class = RestaurantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Restaurant.objects.filter(user=self.request.user)
+
+    def get_serializer_context(self):
+        return {"request": self.request}
+
 
 class FoodCategoryListCreateView(generics.ListCreateAPIView):
     serializer_class = FoodCategorySerializer
@@ -31,6 +45,9 @@ class FoodCategoryListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         restaurant_id = self.request.data.get("restaurant_id")
         serializer.save(restaurant_id=restaurant_id)
+
+    def get_serializer_context(self):
+        return {"request": self.request}
 
 
 class FoodListCreateView(generics.ListCreateAPIView):
@@ -44,8 +61,14 @@ class FoodListCreateView(generics.ListCreateAPIView):
         restaurant_id = self.request.data.get("restaurant")
         serializer.save(restaurant_id=restaurant_id)
 
+    def get_serializer_context(self):
+        return {"request": self.request}
+
 
 class ExtraListCreateView(generics.ListCreateAPIView):
     queryset = Extra.objects.all()
     serializer_class = ExtraSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_context(self):
+        return {"request": self.request}
