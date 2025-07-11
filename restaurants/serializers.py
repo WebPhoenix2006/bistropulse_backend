@@ -3,19 +3,21 @@ from .models import Restaurant, Representative, FoodCategory, Extra, Food, Revie
 
 
 # ✅ Updated: Added photo_url field to return full image URL of representative
+
+
 class RepresentativeSerializer(serializers.ModelSerializer):
-    photo_url = serializers.SerializerMethodField()  # ✅ Custom field for absolute image URL
+    photo_url = serializers.SerializerMethodField()  # ✅ Computed image URL
 
     class Meta:
         model = Representative
-        fields = ["id", "full_name", "photo", "photo_url", "phone", "location"]  # ✅ photo_url added here
+        fields = ["id", "full_name", "photo", "photo_url", "phone", "location"]
 
     def get_photo_url(self, obj):
-        # ✅ Build full image URL using request context
         request = self.context.get("request")
         if obj.photo and request:
             return request.build_absolute_uri(obj.photo.url)
         return None
+
 
 
 class FoodCategorySerializer(serializers.ModelSerializer):
