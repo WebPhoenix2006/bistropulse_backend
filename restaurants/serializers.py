@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import Restaurant, FoodCategory, Extra, Food, Review
+from .models import Restaurant, Representative, FoodCategory, Extra, Food, Review
+
+
+class RepresentativeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Representative
+        fields = "__all__"
 
 
 class FoodCategorySerializer(serializers.ModelSerializer):
@@ -30,7 +36,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class RestaurantSerializer(serializers.ModelSerializer):
     restaurant_image_url = serializers.SerializerMethodField()
-    restaurant_image = serializers.ImageField(required=False)  # ✅ Add this
+    restaurant_image = serializers.ImageField(required=False)
+    representative = RepresentativeSerializer()  # ✅ Now nested
     categories = FoodCategorySerializer(many=True, read_only=True)
     foods = FoodSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
@@ -48,8 +55,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
             "working_period",
             "large_option",
             "location",
-            "restaurant_image",  # ✅ Add this line
-            "restaurant_image_url",  # This one stays for the frontend
+            "restaurant_image",
+            "restaurant_image_url",
             "rating",
             "status",
             "categories",
@@ -62,3 +69,25 @@ class RestaurantSerializer(serializers.ModelSerializer):
         if obj.restaurant_image and request:
             return request.build_absolute_uri(obj.restaurant_image.url)
         return None
+
+    def create(self, validated_data):
+        rep_data = validated_data.pop("representative", None)
+        if rep_data:
+            rep = Representative.objects.create(**rep_data)
+            validated_data["representative"] = rep
+        return Restaurant.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        rep_data = validated_data.pop("representative", None)
+        if rep_data:
+            if instance.representative:
+                for attr, value in rep_data.items():
+                    setattr(instance.representative, attr, value)
+                instance.representative.save()
+            else:
+                rep = Representative.objects.create(**rep_data)
+                instance.representative = rep
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance

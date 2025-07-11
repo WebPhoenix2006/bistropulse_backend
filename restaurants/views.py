@@ -12,7 +12,7 @@ from .serializers import (
 class RestaurantListCreateView(generics.ListCreateAPIView):
     serializer_class = RestaurantSerializer
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser]  # ✅ support file + nested rep image
 
     def get_queryset(self):
         return Restaurant.objects.filter(user=self.request.user)
@@ -73,6 +73,25 @@ class ExtraListCreateView(generics.ListCreateAPIView):
     queryset = Extra.objects.all()
     serializer_class = ExtraSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+
+class RestaurantFoodListCreateView(generics.ListCreateAPIView):
+    serializer_class = FoodSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        restaurant_id = self.kwargs["restaurant_id"]
+        return Food.objects.filter(
+            restaurant__id=restaurant_id, restaurant__user=self.request.user
+        )
+
+    def perform_create(self, serializer):
+        restaurant_id = self.kwargs["restaurant_id"]
+        serializer.save(restaurant_id=restaurant_id)
 
     def get_serializer_context(self):
         return {"request": self.request}
