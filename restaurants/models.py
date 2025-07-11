@@ -3,7 +3,6 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.conf import settings
 
-
 User = get_user_model()
 
 
@@ -14,6 +13,16 @@ def generate_unique_id():
             return new_id
 
 
+class Representative(models.Model):
+    full_name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField(null=True, blank=True)
+    position = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return self.full_name
+
+
 class Restaurant(models.Model):
     id = models.CharField(
         primary_key=True,
@@ -22,9 +31,19 @@ class Restaurant(models.Model):
         editable=False,
         default=generate_unique_id,
     )
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='restaurants')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='restaurants'
+    )
     name = models.CharField(max_length=255, null=True, blank=True)
-    representative = models.CharField(max_length=255, null=True, blank=True)
+    representative = models.ForeignKey(
+        Representative,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="restaurants"
+    )
     phone = models.CharField(max_length=20)
     business_license = models.FileField(upload_to="licenses/", null=True, blank=True)
     owner_nid = models.FileField(upload_to="nid/", null=True, blank=True)
@@ -33,7 +52,9 @@ class Restaurant(models.Model):
     large_option = models.CharField(max_length=30, null=True, blank=True)
     location = models.TextField(null=True, blank=True)
     restaurant_image = models.ImageField(
-        upload_to="restaurant_images/", null=True, blank=True
+        upload_to="restaurant_images/",
+        null=True,
+        blank=True
     )
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
     status = models.CharField(
@@ -52,10 +73,16 @@ class FoodCategory(models.Model):
     )
     name = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.name
+
 
 class Extra(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=8, decimal_places=2)
+
+    def __str__(self):
+        return self.name
 
 
 class Food(models.Model):
@@ -71,6 +98,9 @@ class Food(models.Model):
     image = models.ImageField(upload_to="food_images/", blank=True, null=True)
     extras = models.ManyToManyField(Extra, blank=True, related_name="foods")
 
+    def __str__(self):
+        return self.name
+
 
 class Review(models.Model):
     restaurant = models.ForeignKey(
@@ -80,3 +110,6 @@ class Review(models.Model):
     comment = models.TextField()
     rating = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.restaurant.name} - {self.rating}/5"
