@@ -15,7 +15,7 @@ def generate_unique_id():
 
 class Representative(models.Model):
     full_name = models.CharField(max_length=255)
-    representative = models.ImageField(
+    photo = models.ImageField(  # ✅ Renamed to avoid conflict
         upload_to="restaurant_rep_images/",
         null=True,
         blank=True
@@ -25,6 +25,7 @@ class Representative(models.Model):
 
     def __str__(self):
         return self.full_name
+
 
 
 class Restaurant(models.Model):
