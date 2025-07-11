@@ -15,9 +15,13 @@ def generate_unique_id():
 
 class Representative(models.Model):
     full_name = models.CharField(max_length=255)
+    representative = models.ImageField(
+        upload_to="restaurant_rep_images/",
+        null=True,
+        blank=True
+    )
     phone = models.CharField(max_length=20)
-    email = models.EmailField(null=True, blank=True)
-    position = models.CharField(max_length=100, null=True, blank=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.full_name
