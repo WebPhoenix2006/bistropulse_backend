@@ -2,10 +2,20 @@ from rest_framework import serializers
 from .models import Restaurant, Representative, FoodCategory, Extra, Food, Review
 
 
+# ✅ Updated: Added photo_url field to return full image URL of representative
 class RepresentativeSerializer(serializers.ModelSerializer):
+    photo_url = serializers.SerializerMethodField()  # ✅ Custom field for absolute image URL
+
     class Meta:
         model = Representative
-        fields = "__all__"
+        fields = ["id", "full_name", "photo", "photo_url", "phone", "location"]  # ✅ photo_url added here
+
+    def get_photo_url(self, obj):
+        # ✅ Build full image URL using request context
+        request = self.context.get("request")
+        if obj.photo and request:
+            return request.build_absolute_uri(obj.photo.url)
+        return None
 
 
 class FoodCategorySerializer(serializers.ModelSerializer):
@@ -37,7 +47,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 class RestaurantSerializer(serializers.ModelSerializer):
     restaurant_image_url = serializers.SerializerMethodField()
     restaurant_image = serializers.ImageField(required=False)
-    representative = RepresentativeSerializer()  # ✅ Now nested
+    representative = RepresentativeSerializer()  # ✅ Nested representative object
     categories = FoodCategorySerializer(many=True, read_only=True)
     foods = FoodSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
@@ -65,12 +75,14 @@ class RestaurantSerializer(serializers.ModelSerializer):
         ]
 
     def get_restaurant_image_url(self, obj):
+        # ✅ Build full image URL for restaurant image
         request = self.context.get("request")
         if obj.restaurant_image and request:
             return request.build_absolute_uri(obj.restaurant_image.url)
         return None
 
     def create(self, validated_data):
+        # ✅ Handle nested representative object creation
         rep_data = validated_data.pop("representative", None)
         if rep_data:
             rep = Representative.objects.create(**rep_data)
@@ -78,6 +90,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
         return Restaurant.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
+        # ✅ Handle nested representative object update or creation
         rep_data = validated_data.pop("representative", None)
         if rep_data:
             if instance.representative:
