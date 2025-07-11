@@ -6,7 +6,12 @@ from .models import Restaurant, Representative, FoodCategory, Extra, Food, Revie
 
 
 class RepresentativeSerializer(serializers.ModelSerializer):
-    photo_url = serializers.SerializerMethodField()  # ✅ Computed image URL
+    photo = serializers.ImageField(
+        required=False
+    )  # ✅ Explicit field for file handling
+    photo_url = (
+        serializers.SerializerMethodField()
+    )  # ✅ Matches restaurant_image_url logic
 
     class Meta:
         model = Representative
@@ -17,7 +22,6 @@ class RepresentativeSerializer(serializers.ModelSerializer):
         if obj.photo and request:
             return request.build_absolute_uri(obj.photo.url)
         return None
-
 
 
 class FoodCategorySerializer(serializers.ModelSerializer):
