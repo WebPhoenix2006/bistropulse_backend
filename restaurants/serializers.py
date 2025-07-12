@@ -2,16 +2,9 @@ from rest_framework import serializers
 from .models import Restaurant, Representative, FoodCategory, Extra, Food, Review
 
 
-# ✅ Updated: Added photo_url field to return full image URL of representative
-
-
 class RepresentativeSerializer(serializers.ModelSerializer):
-    photo = serializers.ImageField(
-        required=False
-    )  # ✅ Explicit field for file handling
-    photo_url = (
-        serializers.SerializerMethodField()
-    )  # ✅ Matches restaurant_image_url logic
+    photo = serializers.ImageField(required=False)
+    photo_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Representative
@@ -53,7 +46,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 class RestaurantSerializer(serializers.ModelSerializer):
     restaurant_image_url = serializers.SerializerMethodField()
     restaurant_image = serializers.ImageField(required=False)
-    representative = RepresentativeSerializer()  # ✅ Nested representative object
+    representative = RepresentativeSerializer()
     categories = FoodCategorySerializer(many=True, read_only=True)
     foods = FoodSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
@@ -81,32 +74,46 @@ class RestaurantSerializer(serializers.ModelSerializer):
         ]
 
     def get_restaurant_image_url(self, obj):
-        # ✅ Build full image URL for restaurant image
         request = self.context.get("request")
         if obj.restaurant_image and request:
             return request.build_absolute_uri(obj.restaurant_image.url)
         return None
 
     def create(self, validated_data):
-        # ✅ Handle nested representative object creation
-        rep_data = validated_data.pop("representative", None)
-        if rep_data:
-            rep = Representative.objects.create(**rep_data)
-            validated_data["representative"] = rep
+        rep_data = validated_data.pop("representative", {})
+        request = self.context.get("request")
+
+        # ✅ manually inject nested image
+        if request and hasattr(request, "FILES"):
+            if "representative.photo" in request.FILES:
+                rep_data["photo"] = request.FILES["representative.photo"]
+            if "restaurant_image" in request.FILES:
+                validated_data["restaurant_image"] = request.FILES["restaurant_image"]
+
+        rep = Representative.objects.create(**rep_data)
+        validated_data["representative"] = rep
         return Restaurant.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        # ✅ Handle nested representative object update or creation
-        rep_data = validated_data.pop("representative", None)
+        rep_data = validated_data.pop("representative", {})
+        request = self.context.get("request")
+
+        if request and hasattr(request, "FILES"):
+            if "representative.photo" in request.FILES:
+                rep_data["photo"] = request.FILES["representative.photo"]
+            if "restaurant_image" in request.FILES:
+                validated_data["restaurant_image"] = request.FILES["restaurant_image"]
+
         if rep_data:
             if instance.representative:
                 for attr, value in rep_data.items():
                     setattr(instance.representative, attr, value)
                 instance.representative.save()
             else:
-                rep = Representative.objects.create(**rep_data)
-                instance.representative = rep
+                instance.representative = Representative.objects.create(**rep_data)
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
         instance.save()
         return instance
