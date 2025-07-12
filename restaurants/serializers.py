@@ -53,7 +53,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ["id", "user", "comment", "rating", "created_at"]
 
-
 class RiderSerializer(serializers.ModelSerializer):
     profile_image = serializers.ImageField(required=False)
     profile_image_url = serializers.SerializerMethodField()
@@ -74,6 +73,9 @@ class RiderSerializer(serializers.ModelSerializer):
             "is_active",
         ]
         read_only_fields = ["rider_code"]
+        extra_kwargs = {
+            "restaurant": {"required": False},  # ✅ allow POST without restaurant
+        }
 
     def get_profile_image_url(self, obj):
         request = self.context.get("request")

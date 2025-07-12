@@ -1,5 +1,5 @@
 # views.py
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, serializers
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -156,8 +156,13 @@ class RestaurantRiderListView(generics.ListCreateAPIView):
         ).first()
         if not restaurant:
             raise serializers.ValidationError(
-                {"restaurant": f'Invalid pk "{restaurant_id}" - object does not exist.'}
+                {
+                    "restaurant": f'Invalid restaurant ID "{restaurant_id}" - object does not exist.'
+                }
             )
+
+        # Prevent required field error
+        serializer.validated_data.pop("restaurant", None)
         serializer.save(restaurant=restaurant)
 
     def get_serializer_context(self):
