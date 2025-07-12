@@ -1,3 +1,4 @@
+# views.py
 from rest_framework import generics, permissions, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
@@ -23,10 +24,6 @@ from .serializers import (
     ShiftTypeSerializer,
     RiderShiftSerializer,
 )
-
-# ─────────────────────────────
-# 📦 RESTAURANT CRUD
-# ─────────────────────────────
 
 
 class RestaurantListCreateView(generics.ListCreateAPIView):
@@ -56,11 +53,6 @@ class RestaurantRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView)
         return {"request": self.request}
 
 
-# ─────────────────────────────
-# 🍽️ FOOD CATEGORY CRUD
-# ─────────────────────────────
-
-
 class FoodCategoryListCreateView(generics.ListCreateAPIView):
     serializer_class = FoodCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -74,11 +66,6 @@ class FoodCategoryListCreateView(generics.ListCreateAPIView):
 
     def get_serializer_context(self):
         return {"request": self.request}
-
-
-# ─────────────────────────────
-# 🍔 FOOD CRUD
-# ─────────────────────────────
 
 
 class FoodListCreateView(generics.ListCreateAPIView):
@@ -115,11 +102,6 @@ class RestaurantFoodListCreateView(generics.ListCreateAPIView):
         return {"request": self.request}
 
 
-# ─────────────────────────────
-# ➕ EXTRAS CRUD
-# ─────────────────────────────
-
-
 class ExtraListCreateView(generics.ListCreateAPIView):
     queryset = Extra.objects.all()
     serializer_class = ExtraSerializer
@@ -127,11 +109,6 @@ class ExtraListCreateView(generics.ListCreateAPIView):
 
     def get_serializer_context(self):
         return {"request": self.request}
-
-
-# ─────────────────────────────
-# 🚴‍♂️ RIDER CRUD
-# ─────────────────────────────
 
 
 class RiderListCreateView(generics.ListCreateAPIView):
@@ -161,7 +138,7 @@ class RiderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return {"request": self.request}
 
 
-class RestaurantRiderListView(generics.ListCreateAPIView):  # ✅ both GET & POST
+class RestaurantRiderListView(generics.ListCreateAPIView):
     serializer_class = RiderSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -174,13 +151,19 @@ class RestaurantRiderListView(generics.ListCreateAPIView):  # ✅ both GET & POS
 
     def perform_create(self, serializer):
         restaurant_id = self.kwargs.get("restaurant_id")
-        serializer.save(restaurant_id=restaurant_id)
+        restaurant = Restaurant.objects.filter(
+            id=restaurant_id, user=self.request.user
+        ).first()
+        if not restaurant:
+            raise serializers.ValidationError(
+                {"restaurant": f'Invalid pk "{restaurant_id}" - object does not exist.'}
+            )
+        serializer.save(restaurant=restaurant)
 
     def get_serializer_context(self):
         return {"request": self.request}
 
 
-# 🔄 TOGGLE RIDER ACTIVE STATUS
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def toggle_rider_active_status(request, pk):
@@ -205,11 +188,6 @@ def toggle_rider_active_status(request, pk):
     )
 
 
-# ─────────────────────────────
-# 🕓 SHIFT TYPES
-# ─────────────────────────────
-
-
 class ShiftTypeListCreateView(generics.ListCreateAPIView):
     queryset = ShiftType.objects.all()
     serializer_class = ShiftTypeSerializer
@@ -217,11 +195,6 @@ class ShiftTypeListCreateView(generics.ListCreateAPIView):
 
     def get_serializer_context(self):
         return {"request": self.request}
-
-
-# ─────────────────────────────
-# 🕒 RIDER SHIFTS
-# ─────────────────────────────
 
 
 class RiderShiftListView(generics.ListAPIView):
