@@ -137,6 +137,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
     categories = FoodCategorySerializer(many=True, read_only=True)
     foods = FoodSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
+    riders = RiderSerializer(many=True, read_only=True)  # ✅ Added field
 
     class Meta:
         model = Restaurant
@@ -158,6 +159,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
             "categories",
             "foods",
             "reviews",
+            "riders",  # ✅ Include in output
         ]
 
     def get_restaurant_image_url(self, obj):
