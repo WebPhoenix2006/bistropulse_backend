@@ -113,21 +113,35 @@ class Review(models.Model):
 
 class Rider(models.Model):
     GENDER_CHOICES = (
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-        ('Other', 'Other'),
+        ("Male", "Male"),
+        ("Female", "Female"),
+        ("Other", "Other"),
     )
 
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=15)
-    profile_image = models.ImageField(upload_to='rider_profiles/', null=True, blank=True)
+    profile_image = models.ImageField(
+        upload_to="rider_profiles/", null=True, blank=True
+    )
     date_of_birth = models.DateField(null=True, blank=True)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
+    gender = models.CharField(
+        max_length=10, choices=GENDER_CHOICES, null=True, blank=True
+    )
     address = models.CharField(max_length=255, null=True, blank=True)
     restaurant = models.ForeignKey(
-        "Restaurant", on_delete=models.CASCADE, related_name="riders"
+        Restaurant, on_delete=models.CASCADE, related_name="riders"
     )
     is_active = models.BooleanField(default=True)
+    rider_code = models.CharField(max_length=10, unique=True, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.rider_code:
+            # Generate rider code only when saving (NOT at migration time)
+            code = f"R{random.randint(1000, 9999)}"
+            while Rider.objects.filter(rider_code=code).exists():
+                code = f"R{random.randint(1000, 9999)}"
+            self.rider_code = code
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name
@@ -159,7 +173,11 @@ class RiderShift(models.Model):
         User, on_delete=models.SET_NULL, null=True, related_name="shifts_started"
     )
     ended_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="shifts_ended"
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="shifts_ended",
     )
 
     def duration(self):

@@ -1,7 +1,15 @@
+from datetime import date
 from rest_framework import serializers
 from .models import (
-    Restaurant, Representative, FoodCategory, Extra, Food, Review,
-    Rider, RiderShift, ShiftType
+    Restaurant,
+    Representative,
+    FoodCategory,
+    Extra,
+    Food,
+    Review,
+    Rider,
+    RiderShift,
+    ShiftType,
 )
 
 
@@ -53,15 +61,39 @@ class RiderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rider
         fields = [
-            "id", "full_name", "phone", "profile_image", "profile_image_url",
-            "date_of_birth", "gender", "address", "restaurant", "is_active"
+            "id",
+            "rider_code",
+            "full_name",
+            "phone",
+            "profile_image",
+            "profile_image_url",
+            "date_of_birth",
+            "gender",
+            "address",
+            "restaurant",
+            "is_active",
         ]
+        read_only_fields = ["rider_code"]
 
     def get_profile_image_url(self, obj):
         request = self.context.get("request")
         if obj.profile_image and request:
             return request.build_absolute_uri(obj.profile_image.url)
         return None
+
+    def validate_date_of_birth(self, value):
+        if value:
+            today = date.today()
+            age = (
+                today.year
+                - value.year
+                - ((today.month, today.day) < (value.month, value.day))
+            )
+            if age < 18:
+                raise serializers.ValidationError(
+                    "Rider must be at least 18 years old."
+                )
+        return value
 
 
 class ShiftTypeSerializer(serializers.ModelSerializer):
@@ -77,11 +109,24 @@ class RiderShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiderShift
         fields = [
-            "id", "rider", "rider_name", "shift_type", "shift_type_name",
-            "start_time", "end_time", "status", "secret_code", "started_by", "ended_by",
+            "id",
+            "rider",
+            "rider_name",
+            "shift_type",
+            "shift_type_name",
+            "start_time",
+            "end_time",
+            "status",
+            "secret_code",
+            "started_by",
+            "ended_by",
         ]
         read_only_fields = [
-            "start_time", "status", "started_by", "ended_by", "end_time",
+            "start_time",
+            "status",
+            "started_by",
+            "ended_by",
+            "end_time",
         ]
 
 
@@ -96,10 +141,23 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = [
-            "id", "name", "representative", "phone", "business_license", "owner_nid",
-            "established_date", "working_period", "large_option", "location",
-            "restaurant_image", "restaurant_image_url", "rating", "status",
-            "categories", "foods", "reviews",
+            "id",
+            "name",
+            "representative",
+            "phone",
+            "business_license",
+            "owner_nid",
+            "established_date",
+            "working_period",
+            "large_option",
+            "location",
+            "restaurant_image",
+            "restaurant_image_url",
+            "rating",
+            "status",
+            "categories",
+            "foods",
+            "reviews",
         ]
 
     def get_restaurant_image_url(self, obj):
@@ -112,6 +170,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
         rep_data = validated_data.pop("representative", {})
         request = self.context.get("request")
 
+        # Support nested file fields
         if request and hasattr(request, "FILES"):
             if "representative.photo" in request.FILES:
                 rep_data["photo"] = request.FILES["representative.photo"]
@@ -132,6 +191,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
             if "restaurant_image" in request.FILES:
                 validated_data["restaurant_image"] = request.FILES["restaurant_image"]
 
+        # Update or create nested representative
         if rep_data:
             if instance.representative:
                 for attr, value in rep_data.items():

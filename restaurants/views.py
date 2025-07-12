@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
 from django.utils import timezone
 
 from .models import (
@@ -155,8 +156,28 @@ class RiderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return {"request": self.request}
 
 
+# 🔄 TOGGLE RIDER ACTIVE STATUS
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def toggle_rider_active_status(request, pk):
+    try:
+        rider = Rider.objects.get(pk=pk, restaurant__user=request.user)
+    except Rider.DoesNotExist:
+        return Response({"detail": "Rider not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    rider.is_active = not rider.is_active
+    rider.save()
+
+    return Response({
+        "id": rider.id,
+        "full_name": rider.full_name,
+        "is_active": rider.is_active,
+        "message": f"Rider is now {'active' if rider.is_active else 'inactive'}"
+    }, status=status.HTTP_200_OK)
+
+
 # ─────────────────────────────
-# 🕒 SHIFT TYPE CRUD
+# 🕓 SHIFT TYPES
 # ─────────────────────────────
 
 class ShiftTypeListCreateView(generics.ListCreateAPIView):
@@ -169,7 +190,7 @@ class ShiftTypeListCreateView(generics.ListCreateAPIView):
 
 
 # ─────────────────────────────
-# 📅 RIDER SHIFT LOGIC
+# 🕒 RIDER SHIFTS
 # ─────────────────────────────
 
 class RiderShiftListView(generics.ListAPIView):
