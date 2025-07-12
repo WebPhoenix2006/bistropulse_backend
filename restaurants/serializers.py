@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import Restaurant, Representative, FoodCategory, Extra, Food, Review
+from .models import (
+    Restaurant, Representative, FoodCategory, Extra, Food, Review,
+    Rider, RiderShift, ShiftType
+)
 
 
 class RepresentativeSerializer(serializers.ModelSerializer):
@@ -43,6 +46,45 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "comment", "rating", "created_at"]
 
 
+class RiderSerializer(serializers.ModelSerializer):
+    profile_image = serializers.ImageField(required=False)
+    profile_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Rider
+        fields = [
+            "id", "full_name", "phone", "profile_image", "profile_image_url",
+            "date_of_birth", "gender", "address", "restaurant", "is_active"
+        ]
+
+    def get_profile_image_url(self, obj):
+        request = self.context.get("request")
+        if obj.profile_image and request:
+            return request.build_absolute_uri(obj.profile_image.url)
+        return None
+
+
+class ShiftTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShiftType
+        fields = ["id", "name", "start_time", "end_time"]
+
+
+class RiderShiftSerializer(serializers.ModelSerializer):
+    rider_name = serializers.CharField(source="rider.full_name", read_only=True)
+    shift_type_name = serializers.CharField(source="shift_type.name", read_only=True)
+
+    class Meta:
+        model = RiderShift
+        fields = [
+            "id", "rider", "rider_name", "shift_type", "shift_type_name",
+            "start_time", "end_time", "status", "secret_code", "started_by", "ended_by",
+        ]
+        read_only_fields = [
+            "start_time", "status", "started_by", "ended_by", "end_time",
+        ]
+
+
 class RestaurantSerializer(serializers.ModelSerializer):
     restaurant_image_url = serializers.SerializerMethodField()
     restaurant_image = serializers.ImageField(required=False)
@@ -54,23 +96,10 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = [
-            "id",
-            "name",
-            "representative",
-            "phone",
-            "business_license",
-            "owner_nid",
-            "established_date",
-            "working_period",
-            "large_option",
-            "location",
-            "restaurant_image",
-            "restaurant_image_url",
-            "rating",
-            "status",
-            "categories",
-            "foods",
-            "reviews",
+            "id", "name", "representative", "phone", "business_license", "owner_nid",
+            "established_date", "working_period", "large_option", "location",
+            "restaurant_image", "restaurant_image_url", "rating", "status",
+            "categories", "foods", "reviews",
         ]
 
     def get_restaurant_image_url(self, obj):
@@ -83,7 +112,6 @@ class RestaurantSerializer(serializers.ModelSerializer):
         rep_data = validated_data.pop("representative", {})
         request = self.context.get("request")
 
-        # ✅ manually inject nested image
         if request and hasattr(request, "FILES"):
             if "representative.photo" in request.FILES:
                 rep_data["photo"] = request.FILES["representative.photo"]
