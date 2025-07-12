@@ -15,6 +15,7 @@ from .views import (
     StartRiderShiftView,
     EndRiderShiftView,
     toggle_rider_active_status,
+    RestaurantRiderListView,  # <-- added import
 )
 
 urlpatterns = [
@@ -24,6 +25,11 @@ urlpatterns = [
         "<str:pk>/",
         RestaurantRetrieveUpdateDestroyView.as_view(),
         name="restaurant-detail",
+    ),
+    path(
+        "<str:restaurant_id>/riders/",  # <-- new route
+        RestaurantRiderListView.as_view(),
+        name="restaurant-riders",
     ),
     # ─── FOOD ──────────────────────────────────────────
     path(

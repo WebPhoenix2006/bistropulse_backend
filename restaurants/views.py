@@ -28,6 +28,7 @@ from .serializers import (
 # 📦 RESTAURANT CRUD
 # ─────────────────────────────
 
+
 class RestaurantListCreateView(generics.ListCreateAPIView):
     serializer_class = RestaurantSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -59,6 +60,7 @@ class RestaurantRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView)
 # 🍽️ FOOD CATEGORY CRUD
 # ─────────────────────────────
 
+
 class FoodCategoryListCreateView(generics.ListCreateAPIView):
     serializer_class = FoodCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -77,6 +79,7 @@ class FoodCategoryListCreateView(generics.ListCreateAPIView):
 # ─────────────────────────────
 # 🍔 FOOD CRUD
 # ─────────────────────────────
+
 
 class FoodListCreateView(generics.ListCreateAPIView):
     serializer_class = FoodSerializer
@@ -116,6 +119,7 @@ class RestaurantFoodListCreateView(generics.ListCreateAPIView):
 # ➕ EXTRAS CRUD
 # ─────────────────────────────
 
+
 class ExtraListCreateView(generics.ListCreateAPIView):
     queryset = Extra.objects.all()
     serializer_class = ExtraSerializer
@@ -128,6 +132,7 @@ class ExtraListCreateView(generics.ListCreateAPIView):
 # ─────────────────────────────
 # 🚴‍♂️ RIDER CRUD
 # ─────────────────────────────
+
 
 class RiderListCreateView(generics.ListCreateAPIView):
     serializer_class = RiderSerializer
@@ -163,22 +168,28 @@ def toggle_rider_active_status(request, pk):
     try:
         rider = Rider.objects.get(pk=pk, restaurant__user=request.user)
     except Rider.DoesNotExist:
-        return Response({"detail": "Rider not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Rider not found."}, status=status.HTTP_404_NOT_FOUND
+        )
 
     rider.is_active = not rider.is_active
     rider.save()
 
-    return Response({
-        "id": rider.id,
-        "full_name": rider.full_name,
-        "is_active": rider.is_active,
-        "message": f"Rider is now {'active' if rider.is_active else 'inactive'}"
-    }, status=status.HTTP_200_OK)
+    return Response(
+        {
+            "id": rider.id,
+            "full_name": rider.full_name,
+            "is_active": rider.is_active,
+            "message": f"Rider is now {'active' if rider.is_active else 'inactive'}",
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
 # ─────────────────────────────
 # 🕓 SHIFT TYPES
 # ─────────────────────────────
+
 
 class ShiftTypeListCreateView(generics.ListCreateAPIView):
     queryset = ShiftType.objects.all()
@@ -192,6 +203,7 @@ class ShiftTypeListCreateView(generics.ListCreateAPIView):
 # ─────────────────────────────
 # 🕒 RIDER SHIFTS
 # ─────────────────────────────
+
 
 class RiderShiftListView(generics.ListAPIView):
     serializer_class = RiderShiftSerializer
@@ -217,9 +229,7 @@ class StartRiderShiftView(APIView):
             return Response({"detail": "Rider or shift type not found."}, status=404)
 
         shift = RiderShift.objects.create(
-            rider=rider,
-            shift_type=shift_type,
-            started_by=request.user
+            rider=rider, shift_type=shift_type, started_by=request.user
         )
         serializer = RiderShiftSerializer(shift, context={"request": request})
         return Response(serializer.data, status=201)
@@ -247,3 +257,17 @@ class EndRiderShiftView(APIView):
 
         serializer = RiderShiftSerializer(shift, context={"request": request})
         return Response(serializer.data, status=200)
+
+
+class RestaurantRiderListView(generics.ListAPIView):
+    serializer_class = RiderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        restaurant_id = self.kwargs.get("restaurant_id")
+        return Rider.objects.filter(
+            restaurant__id=restaurant_id, restaurant__user=self.request.user
+        )
+
+    def get_serializer_context(self):
+        return {"request": self.request}
