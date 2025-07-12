@@ -11,7 +11,6 @@ urlpatterns = [
     path("api/customers/", include("customers.urls")),
     path("api/chat/", include("chat.urls")),
     path("api/users/", include("users.urls")),
-    path("api/riders/", include("riders.urls")),
     # Health check endpoint for Render
     path(
         "api/health/",
