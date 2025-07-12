@@ -161,6 +161,25 @@ class RiderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return {"request": self.request}
 
 
+class RestaurantRiderListView(generics.ListCreateAPIView):  # ✅ both GET & POST
+    serializer_class = RiderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        restaurant_id = self.kwargs.get("restaurant_id")
+        return Rider.objects.filter(
+            restaurant__id=restaurant_id, restaurant__user=self.request.user
+        )
+
+    def perform_create(self, serializer):
+        restaurant_id = self.kwargs.get("restaurant_id")
+        serializer.save(restaurant_id=restaurant_id)
+
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+
 # 🔄 TOGGLE RIDER ACTIVE STATUS
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
@@ -257,17 +276,3 @@ class EndRiderShiftView(APIView):
 
         serializer = RiderShiftSerializer(shift, context={"request": request})
         return Response(serializer.data, status=200)
-
-
-class RestaurantRiderListView(generics.ListAPIView):
-    serializer_class = RiderSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        restaurant_id = self.kwargs.get("restaurant_id")
-        return Rider.objects.filter(
-            restaurant__id=restaurant_id, restaurant__user=self.request.user
-        )
-
-    def get_serializer_context(self):
-        return {"request": self.request}
