@@ -117,10 +117,29 @@ class RiderListCreateView(generics.ListCreateAPIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
+        restaurant_id = self.kwargs.get("restaurant_id")
+        if restaurant_id:
+            return Rider.objects.filter(
+                restaurant__id=restaurant_id, restaurant__user=self.request.user
+            )
         return Rider.objects.filter(restaurant__user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save()
+        restaurant_id = self.kwargs.get("restaurant_id")
+        if restaurant_id:
+            restaurant = Restaurant.objects.filter(
+                id=restaurant_id, user=self.request.user
+            ).first()
+            if not restaurant:
+                raise serializers.ValidationError(
+                    {
+                        "restaurant": f'Invalid restaurant ID "{restaurant_id}" - object does not exist.'
+                    }
+                )
+            serializer.validated_data.pop("restaurant", None)
+            serializer.save(restaurant=restaurant)
+        else:
+            serializer.save()  # Restaurant must be passed via form if not in URL
 
     def get_serializer_context(self):
         return {"request": self.request}
