@@ -18,26 +18,22 @@ urlpatterns = [
         RestaurantRetrieveUpdateDestroyView.as_view(),
         name="restaurant-detail",
     ),
-
     # Restaurant-specific Riders
     path(
         "restaurants/<str:restaurant_id>/riders/",
         RiderListCreateView.as_view(),
         name="restaurant-riders",
     ),
-
     # ✅ Restaurant-specific Orders
     path(
-        "restaurants/<str:restaurant_id>/orders/",
+        "<str:restaurant_id>/orders/",
         OrderListCreateView.as_view(),
         name="restaurant-orders",
     ),
-
     # Food categories
     path(
         "food-categories/", FoodCategoryListCreateView.as_view(), name="food-categories"
     ),
-
     # Foods (global and per restaurant)
     path("foods/", FoodListCreateView.as_view(), name="foods"),
     path(
@@ -45,7 +41,6 @@ urlpatterns = [
         RestaurantFoodListCreateView.as_view(),
         name="restaurant-foods",
     ),
-
     # Extras
     path("extras/", ExtraListCreateView.as_view(), name="extras"),
 ]
