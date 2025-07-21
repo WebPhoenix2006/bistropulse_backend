@@ -137,7 +137,6 @@ class Rider(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.rider_code:
-            # Generate rider code only when saving (NOT at migration time)
             code = f"R{random.randint(1000, 9999)}"
             while Rider.objects.filter(rider_code=code).exists():
                 code = f"R{random.randint(1000, 9999)}"
@@ -214,11 +213,11 @@ class Order(models.Model):
     order_id = models.CharField(
         max_length=10, unique=True, default=generate_order_id, editable=False
     )
-    restaurant = models.ForeignKey('restaurants.Restaurant', related_name='orders', on_delete=models.CASCADE)
-    rider = models.ForeignKey('restaurants.Rider', related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
-    
-    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('complete', 'Complete'), ('cancelled', 'Cancelled'), ('pickoff', 'Pickoff'), ('dropoff', 'Dropoff')])
-    payment_status = models.CharField(max_length=20, choices=[('paid', 'Paid'), ('not_paid', 'Not Paid')])
+    restaurant = models.ForeignKey(Restaurant, related_name='orders', on_delete=models.CASCADE)
+    rider = models.ForeignKey(Rider, related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='not_paid')
 
     delivery_address = models.TextField(blank=True, null=True)
     customer_name = models.CharField(max_length=100, blank=True, null=True)
@@ -229,15 +228,15 @@ class Order(models.Model):
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.order_id
 
+
 class OrderItem(models.Model):
-    order = models.ForeignKey('Order', related_name='items', on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)

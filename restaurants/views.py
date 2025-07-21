@@ -280,17 +280,17 @@ class EndRiderShiftView(APIView):
 
 
 class OrderListCreateView(generics.ListCreateAPIView):
-    queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Only return orders from restaurants owned by current user
         restaurant_id = self.kwargs.get("restaurant_id")
-        return Order.objects.filter(restaurant__restaurant_id=restaurant_id)
-
+        return Order.objects.filter(
+            restaurant__id=restaurant_id,
+            restaurant__user=self.request.user
+        )
 
     def perform_create(self, serializer):
         restaurant_id = self.kwargs.get("restaurant_id")
-        restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id)
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id, user=self.request.user)
         serializer.save(restaurant=restaurant)
