@@ -214,12 +214,36 @@ class Order(models.Model):
     order_id = models.CharField(
         max_length=10, unique=True, default=generate_order_id, editable=False
     )
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name="orders")
-    rider = models.ForeignKey(Rider, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders")
-    customer_name = models.CharField(max_length=255, null=True, blank=True)  # Optional
-    order_date = models.DateTimeField(default=timezone.now)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
-    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default="not_paid")
+    restaurant = models.ForeignKey('restaurants.Restaurant', related_name='orders', on_delete=models.CASCADE)
+    rider = models.ForeignKey('restaurants.Rider', related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('complete', 'Complete'), ('cancelled', 'Cancelled'), ('pickoff', 'Pickoff'), ('dropoff', 'Dropoff')])
+    payment_status = models.CharField(max_length=20, choices=[('paid', 'Paid'), ('not_paid', 'Not Paid')])
+
+    delivery_address = models.TextField(blank=True, null=True)
+    customer_name = models.CharField(max_length=100, blank=True, null=True)
+    customer_phone = models.CharField(max_length=20, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    subtotal_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
 
     def __str__(self):
         return self.order_id
+
+class OrderItem(models.Model):
+    order = models.ForeignKey('Order', related_name='items', on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def total_price(self):
+        return self.quantity * self.unit_price
+
+    def __str__(self):
+        return f"{self.quantity}x {self.name} (₦{self.unit_price})"
