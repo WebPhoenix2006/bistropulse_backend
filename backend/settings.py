@@ -43,12 +43,14 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
+    "channels",
     # Local apps
     "authapp",
     "restaurants",
     "customers",
     "users",
     "chat",
+    "orders"
 ]
 
 MIDDLEWARE = [
@@ -128,9 +130,15 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
-    "https://bistro-pulse-admin.vercel.app/"
+    "https://bistro-pulse-admin.vercel.app"
     # Add production frontend URL when ready
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers)
 CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
+ASGI_APPLICATION = 'backend.asgi.application'
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}

@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    OrderListCreateView,
     RestaurantListCreateView,
     RestaurantRetrieveUpdateDestroyView,
     FoodCategoryListCreateView,
@@ -23,6 +24,8 @@ urlpatterns = [
         RiderListCreateView.as_view(),
         name="restaurant-riders",
     ),
+    # Restaurant specific orders
+    path("orders/", OrderListCreateView.as_view(), name="order-list-create"),
     # Food categories
     path(
         "food-categories/", FoodCategoryListCreateView.as_view(), name="food-categories"

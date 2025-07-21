@@ -14,8 +14,10 @@ from .models import (
     Rider,
     ShiftType,
     RiderShift,
+    Order
 )
 from .serializers import (
+    OrderSerializer,
     RestaurantSerializer,
     FoodCategorySerializer,
     FoodSerializer,
@@ -23,6 +25,7 @@ from .serializers import (
     RiderSerializer,
     ShiftTypeSerializer,
     RiderShiftSerializer,
+    
 )
 
 
@@ -273,3 +276,19 @@ class EndRiderShiftView(APIView):
 
         serializer = RiderShiftSerializer(shift, context={"request": request})
         return Response(serializer.data, status=200)
+
+
+class OrderListCreateView(generics.ListCreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return orders from restaurants owned by current user
+        return Order.objects.filter(restaurant__user=self.request.user)
+
+    def perform_create(self, serializer):
+        restaurant_id = self.request.data.get("restaurant")
+        if not Restaurant.objects.filter(id=restaurant_id, user=self.request.user).exists():
+            raise serializers.ValidationError("Invalid restaurant for current user")
+        serializer.save()

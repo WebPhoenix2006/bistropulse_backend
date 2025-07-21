@@ -1,3 +1,4 @@
+from django.utils import timezone
 import random
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -187,3 +188,38 @@ class RiderShift(models.Model):
 
     def __str__(self):
         return f"{self.rider.full_name} - {self.status} - {self.start_time.date()}"
+
+
+def generate_order_id():
+    while True:
+        order_id = f"BO{random.randint(1000, 9999)}"
+        if not Order.objects.filter(order_id=order_id).exists():
+            return order_id
+
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("pickoff", "Pickoff"),
+        ("dropoff", "Dropoff"),
+        ("complete", "Complete"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ("paid", "Paid"),
+        ("not_paid", "Not Paid"),
+    ]
+
+    order_id = models.CharField(
+        max_length=10, unique=True, default=generate_order_id, editable=False
+    )
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name="orders")
+    rider = models.ForeignKey(Rider, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders")
+    customer_name = models.CharField(max_length=255, null=True, blank=True)  # Optional
+    order_date = models.DateTimeField(default=timezone.now)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default="not_paid")
+
+    def __str__(self):
+        return self.order_id
