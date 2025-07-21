@@ -1,4 +1,5 @@
 # views.py
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
@@ -285,10 +286,11 @@ class OrderListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         # Only return orders from restaurants owned by current user
-        return Order.objects.filter(restaurant__user=self.request.user)
+        restaurant_id = self.kwargs.get("restaurant_id")
+        return Order.objects.filter(restaurant__restaurant_id=restaurant_id)
+
 
     def perform_create(self, serializer):
-        restaurant_id = self.request.data.get("restaurant")
-        if not Restaurant.objects.filter(id=restaurant_id, user=self.request.user).exists():
-            raise serializers.ValidationError("Invalid restaurant for current user")
-        serializer.save()
+        restaurant_id = self.kwargs.get("restaurant_id")
+        restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id)
+        serializer.save(restaurant=restaurant)

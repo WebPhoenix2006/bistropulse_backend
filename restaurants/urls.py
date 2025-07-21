@@ -7,7 +7,7 @@ from .views import (
     FoodListCreateView,
     ExtraListCreateView,
     RestaurantFoodListCreateView,
-    RiderListCreateView,  # For restaurant-specific rider creation/list
+    RiderListCreateView,
 )
 
 urlpatterns = [
@@ -18,18 +18,26 @@ urlpatterns = [
         RestaurantRetrieveUpdateDestroyView.as_view(),
         name="restaurant-detail",
     ),
+
     # Restaurant-specific Riders
     path(
-        "restaurants/<int:restaurant_id>/riders/",
+        "restaurants/<str:restaurant_id>/riders/",
         RiderListCreateView.as_view(),
         name="restaurant-riders",
     ),
-    # Restaurant specific orders
-    path("orders/", OrderListCreateView.as_view(), name="order-list-create"),
+
+    # ✅ Restaurant-specific Orders
+    path(
+        "restaurants/<str:restaurant_id>/orders/",
+        OrderListCreateView.as_view(),
+        name="restaurant-orders",
+    ),
+
     # Food categories
     path(
         "food-categories/", FoodCategoryListCreateView.as_view(), name="food-categories"
     ),
+
     # Foods (global and per restaurant)
     path("foods/", FoodListCreateView.as_view(), name="foods"),
     path(
@@ -37,6 +45,7 @@ urlpatterns = [
         RestaurantFoodListCreateView.as_view(),
         name="restaurant-foods",
     ),
+
     # Extras
     path("extras/", ExtraListCreateView.as_view(), name="extras"),
 ]
