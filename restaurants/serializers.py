@@ -55,6 +55,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ["id", "user", "comment", "rating", "created_at"]
 
+
 class RiderSerializer(serializers.ModelSerializer):
     profile_image = serializers.ImageField(required=False)
     profile_image_url = serializers.SerializerMethodField()
@@ -73,11 +74,11 @@ class RiderSerializer(serializers.ModelSerializer):
             "address",
             "restaurant",
             "is_active",
-            "orders"
+            "orders",
         ]
         read_only_fields = ["rider_code"]
         extra_kwargs = {
-            "restaurant": {"required": False},  # ✅ allow POST without restaurant
+            "restaurant": {"required": False},
         }
 
     def get_profile_image_url(self, obj):
@@ -142,7 +143,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
     categories = FoodCategorySerializer(many=True, read_only=True)
     foods = FoodSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
-    riders = RiderSerializer(many=True, read_only=True)  # ✅ Added field
+    riders = RiderSerializer(many=True, read_only=True)
+    orders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Restaurant
@@ -165,7 +167,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
             "foods",
             "reviews",
             "riders",
-            "orders"# ✅ Include in output
+            "orders",
         ]
 
     def get_restaurant_image_url(self, obj):
@@ -178,7 +180,6 @@ class RestaurantSerializer(serializers.ModelSerializer):
         rep_data = validated_data.pop("representative", {})
         request = self.context.get("request")
 
-        # Support nested file fields
         if request and hasattr(request, "FILES"):
             if "representative.photo" in request.FILES:
                 rep_data["photo"] = request.FILES["representative.photo"]
@@ -199,7 +200,6 @@ class RestaurantSerializer(serializers.ModelSerializer):
             if "restaurant_image" in request.FILES:
                 validated_data["restaurant_image"] = request.FILES["restaurant_image"]
 
-        # Update or create nested representative
         if rep_data:
             if instance.representative:
                 for attr, value in rep_data.items():
@@ -214,10 +214,12 @@ class RestaurantSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['id', 'name', 'quantity', 'unit_price']
+        fields = ["id", "name", "quantity", "unit_price"]
+
 
 class OrderSerializer(serializers.ModelSerializer):
     rider = RiderSerializer(read_only=True)
@@ -227,20 +229,20 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id',
-            'order_id',
-            'status',
-            'payment_status',
-            'restaurant',
-            'rider',
-            'delivery_address',
-            'customer_name',
-            'customer_phone',
-            'notes',
-            'subtotal_amount',
-            'delivery_fee',
-            'total_amount',
-            'items',
-            'created_at',
-            'updated_at'
+            "id",
+            "order_id",
+            "status",
+            "payment_status",
+            "restaurant",
+            "rider",
+            "delivery_address",
+            "customer_name",
+            "customer_phone",
+            "notes",
+            "subtotal_amount",
+            "delivery_fee",
+            "total_amount",
+            "items",
+            "created_at",
+            "updated_at",
         ]
