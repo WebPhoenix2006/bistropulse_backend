@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    OrderListCreateView,
     RiderListCreateView,
     RiderRetrieveUpdateDestroyView,
     toggle_rider_active_status,
@@ -11,6 +12,7 @@ from .views import (
 urlpatterns = [
     path("", RiderListCreateView.as_view(), name="rider-list-create"),
     path("<int:pk>/", RiderRetrieveUpdateDestroyView.as_view(), name="rider-detail"),
+    path("<int:rider_id>/orders/", OrderListCreateView.as_view(), name="rider-orders"),
     path("<int:pk>/toggle-active/", toggle_rider_active_status, name="rider-toggle-active"),
     path("<int:rider_id>/shifts/start/", StartRiderShiftView.as_view(), name="start-rider-shift"),
     path("shifts/<int:pk>/end/", EndRiderShiftView.as_view(), name="end-rider-shift"),

@@ -30,6 +30,7 @@ urlpatterns = [
         OrderListCreateView.as_view(),
         name="restaurant-orders",
     ),
+    
     # Food Categories
     path(
         "food-categories/", FoodCategoryListCreateView.as_view(), name="food-categories"
