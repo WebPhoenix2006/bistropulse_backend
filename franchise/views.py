@@ -21,15 +21,16 @@ class BranchListCreateView(generics.ListCreateAPIView):
     serializer_class = BranchSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+    lookup_field = "franchise_id"  # Use this in URLConf too
 
     def get_queryset(self):
         franchise_id = self.kwargs.get("franchise_id")
-        return Branch.objects.filter(franchise_id=franchise_id)
+        return Branch.objects.filter(franchise__franchise_id=franchise_id)
 
     def perform_create(self, serializer):
         franchise_id = self.kwargs.get("franchise_id")
         try:
-            franchise = Franchise.objects.get(id=franchise_id)
+            franchise = Franchise.objects.get(franchise_id=franchise_id)
         except Franchise.DoesNotExist:
             raise ValidationError({"franchise": ["Invalid franchise ID."]})
 
