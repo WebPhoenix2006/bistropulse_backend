@@ -10,15 +10,18 @@ class RepresentativeSerializer(serializers.ModelSerializer):
 
 class FranchiseSerializer(serializers.ModelSerializer):
     owner = RepresentativeSerializer()
+    franchise_id = serializers.CharField(read_only=True)
 
     class Meta:
         model = Franchise
         fields = "__all__"
+        read_only_fields = ["franchise_id", "created_by", "created_at", "updated_at"]
 
     def create(self, validated_data):
         owner_data = validated_data.pop("owner")
         owner = Representative.objects.create(**owner_data)
-        return Franchise.objects.create(owner=owner, **validated_data)
+        user = self.context["request"].user
+        return Franchise.objects.create(owner=owner, created_by=user, **validated_data)
 
     def update(self, instance, validated_data):
         owner_data = validated_data.pop("owner", None)
@@ -36,16 +39,18 @@ class FranchiseSerializer(serializers.ModelSerializer):
 
 class BranchSerializer(serializers.ModelSerializer):
     representative = RepresentativeSerializer()
+    branch_id = serializers.CharField(read_only=True)
 
     class Meta:
         model = Branch
         fields = "__all__"
-        read_only_fields = ["franchise"]  # <- critical: franchise comes from URL, not user input
+        read_only_fields = ["franchise", "branch_id", "created_by"]
 
     def create(self, validated_data):
         rep_data = validated_data.pop("representative")
         rep = Representative.objects.create(**rep_data)
-        return Branch.objects.create(representative=rep, **validated_data)
+        user = self.context["request"].user
+        return Branch.objects.create(representative=rep, created_by=user, **validated_data)
 
     def update(self, instance, validated_data):
         rep_data = validated_data.pop("representative", None)
