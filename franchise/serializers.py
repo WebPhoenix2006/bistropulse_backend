@@ -18,15 +18,15 @@ class FranchiseSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         owner_data = validated_data.pop("owner")
         owner = Representative.objects.create(**owner_data)
-        franchise = Franchise.objects.create(owner=owner, **validated_data)
-        return franchise
+        return Franchise.objects.create(owner=owner, **validated_data)
 
     def update(self, instance, validated_data):
         owner_data = validated_data.pop("owner", None)
         if owner_data:
+            rep = instance.owner
             for attr, value in owner_data.items():
-                setattr(instance.owner, attr, value)
-            instance.owner.save()
+                setattr(rep, attr, value)
+            rep.save()
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -40,19 +40,20 @@ class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
         fields = "__all__"
+        read_only_fields = ["franchise"]  # <- critical: franchise comes from URL, not user input
 
     def create(self, validated_data):
         rep_data = validated_data.pop("representative")
         rep = Representative.objects.create(**rep_data)
-        branch = Branch.objects.create(representative=rep, **validated_data)
-        return branch
+        return Branch.objects.create(representative=rep, **validated_data)
 
     def update(self, instance, validated_data):
         rep_data = validated_data.pop("representative", None)
         if rep_data:
+            rep = instance.representative
             for attr, value in rep_data.items():
-                setattr(instance.representative, attr, value)
-            instance.representative.save()
+                setattr(rep, attr, value)
+            rep.save()
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

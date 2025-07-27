@@ -14,8 +14,7 @@ class FranchiseListCreateView(generics.ListCreateAPIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
-        # Let serializer handle nested representative creation logic
-        serializer.save()
+        serializer.save()  # nested 'owner' will be created by serializer logic
 
 
 class BranchListCreateView(generics.ListCreateAPIView):
@@ -25,7 +24,7 @@ class BranchListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         franchise_id = self.kwargs.get("franchise_id")
-        return Branch.objects.filter(franchise__id=franchise_id)
+        return Branch.objects.filter(franchise_id=franchise_id)
 
     def perform_create(self, serializer):
         franchise_id = self.kwargs.get("franchise_id")

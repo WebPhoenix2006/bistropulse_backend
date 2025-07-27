@@ -1,5 +1,8 @@
 import uuid
 from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 def generate_franchise_id():
@@ -45,6 +48,9 @@ class Franchise(models.Model):
         choices=[("Active", "Active"), ("Inactive", "Inactive")],
         default="Active",
     )
+    created_by = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="franchises", blank=True, null=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -76,6 +82,9 @@ class Branch(models.Model):
     rating = models.CharField(max_length=5, default="0.0")
     status = models.CharField(
         max_length=20, choices=[("Open", "Open"), ("Closed", "Closed")], default="Open"
+    )
+    created_by = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="branches", blank=True, null=True
     )
 
     def __str__(self):
