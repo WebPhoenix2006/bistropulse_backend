@@ -4,7 +4,7 @@ from .models import Message
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = serializers.ReadOnlyField(source="sender.id")  # 👈 important
-    timestamp = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    # timestamp = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
 
 
     class Meta:
