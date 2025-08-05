@@ -15,10 +15,8 @@ from .models import (
     Rider,
     ShiftType,
     RiderShift,
-    Order
 )
 from .serializers import (
-    OrderSerializer,
     RestaurantSerializer,
     FoodCategorySerializer,
     FoodSerializer,
@@ -279,18 +277,3 @@ class EndRiderShiftView(APIView):
         return Response(serializer.data, status=200)
 
 
-class OrderListCreateView(generics.ListCreateAPIView):
-    serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        restaurant_id = self.kwargs.get("restaurant_id")
-        return Order.objects.filter(
-            restaurant__id=restaurant_id,
-            restaurant__user=self.request.user
-        )
-
-    def perform_create(self, serializer):
-        restaurant_id = self.kwargs.get("restaurant_id")
-        restaurant = get_object_or_404(Restaurant, id=restaurant_id, user=self.request.user)
-        serializer.save(restaurant=restaurant)

@@ -1,6 +1,5 @@
 from django.urls import path
 from .views import (
-    OrderListCreateView,
     RestaurantListCreateView,
     RestaurantRetrieveUpdateDestroyView,
     FoodCategoryListCreateView,
@@ -9,6 +8,7 @@ from .views import (
     RestaurantFoodListCreateView,
     RiderListCreateView,
 )
+from orders.views import OrderListCreateView
 
 urlpatterns = [
     # Restaurants

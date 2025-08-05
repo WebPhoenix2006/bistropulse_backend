@@ -1,6 +1,5 @@
 from django.urls import path
 from .views import (
-    OrderListCreateView,
     RiderListCreateView,
     RiderRetrieveUpdateDestroyView,
     toggle_rider_active_status,

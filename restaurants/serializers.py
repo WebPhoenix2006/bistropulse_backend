@@ -1,8 +1,6 @@
 from datetime import date
 from rest_framework import serializers
 from .models import (
-    Order,
-    OrderItem,
     Restaurant,
     Representative,
     FoodCategory,
@@ -214,35 +212,3 @@ class RestaurantSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
-class OrderItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrderItem
-        fields = ["id", "name", "quantity", "unit_price"]
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    rider = RiderSerializer(read_only=True)
-    restaurant = RestaurantSerializer(read_only=True)
-    items = OrderItemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Order
-        fields = [
-            "id",
-            "order_id",
-            "status",
-            "payment_status",
-            "restaurant",
-            "rider",
-            "delivery_address",
-            "customer_name",
-            "customer_phone",
-            "notes",
-            "subtotal_amount",
-            "delivery_fee",
-            "total_amount",
-            "items",
-            "created_at",
-            "updated_at",
-        ]
