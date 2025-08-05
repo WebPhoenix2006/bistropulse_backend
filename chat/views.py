@@ -20,4 +20,4 @@ class MessageListCreateView(generics.ListCreateAPIView):
         
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
-        logging.warning(f'Saved timestamp: {Message.timestamp}')  # Full datetime info
+        # logging.warning(f'Saved timestamp: {Message.timestamp}')  # Full datetime info
