@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "channels",
-    "drf-spectacular",
+    "drf_spectacular",
     # Local apps
     "authapp",
     "restaurants",
