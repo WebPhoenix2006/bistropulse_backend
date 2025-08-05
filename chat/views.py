@@ -2,6 +2,8 @@ from django.shortcuts import render
 from rest_framework import generics, permissions
 from .models import Message
 from .serializers import MessageSerializer
+import logging
+
 
 class MessageListCreateView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer    
@@ -18,3 +20,4 @@ class MessageListCreateView(generics.ListCreateAPIView):
         
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
+        logging.warning(f'Saved timestamp: {instance.timestamp}')  # Full datetime info
