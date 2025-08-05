@@ -7,8 +7,8 @@ from .views import (
     StartRiderShiftView,
     EndRiderShiftView,
     RiderShiftListView,
-    RiderOrderListView,  # 👈 make sure this is imported
 )
+from orders.views import RiderOrderListView
 
 urlpatterns = [
     path("", RiderListCreateView.as_view(), name="rider-list-create"),
