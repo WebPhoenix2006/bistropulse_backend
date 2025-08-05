@@ -39,12 +39,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.gis",
     # Third-party
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
     "channels",
     "drf_spectacular",
+
     # Local apps
     "authapp",
     "restaurants",
@@ -95,7 +97,12 @@ WSGI_APPLICATION = "backend.wsgi.application"
 RENDER = os.environ.get("RENDER")
 
 if RENDER:
-    DATABASES = {"default": dj_database_url.config(conn_max_age=600)}
+    DATABASES = {
+        "default": dj_database_url.config(
+            conn_max_age=600,
+            engine="django.contrib.gis.db.backends.postgis"
+        )
+    }
 else:
     DATABASES = {
         "default": {

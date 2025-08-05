@@ -7,12 +7,17 @@ from .views import (
     StartRiderShiftView,
     EndRiderShiftView,
     RiderShiftListView,
+    RiderOrderListView,  # 👈 make sure this is imported
 )
 
 urlpatterns = [
     path("", RiderListCreateView.as_view(), name="rider-list-create"),
     path("<int:pk>/", RiderRetrieveUpdateDestroyView.as_view(), name="rider-detail"),
-    path("<str:rider_id>/orders/", OrderListCreateView.as_view(), name="rider-orders"),
+
+    # Rider's assigned orders (aka deliveries)
+    path("<int:rider_id>/deliveries/", RiderOrderListView.as_view(), name="rider-deliveries"),
+
+    # Other stuff
     path("<int:pk>/toggle-active/", toggle_rider_active_status, name="rider-toggle-active"),
     path("<int:rider_id>/shifts/start/", StartRiderShiftView.as_view(), name="start-rider-shift"),
     path("shifts/<int:pk>/end/", EndRiderShiftView.as_view(), name="end-rider-shift"),
