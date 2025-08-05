@@ -5,7 +5,6 @@ from orders.models import Order
 from restaurants.models import Rider
 from restaurants.serializers import RiderSerializer
 from customers.serializers import CustomerSerializer
-from restaurants.serializers import BranchSerializer
 from django.contrib.gis.geos import Point
 
 
@@ -27,7 +26,6 @@ class PointField(serializers.Field):
 class OrderSerializer(serializers.ModelSerializer):
     rider = RiderSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
-    branch = BranchSerializer(read_only=True)
 
     rider_id = serializers.PrimaryKeyRelatedField(
         queryset=Rider.objects.all(), write_only=True, required=False
