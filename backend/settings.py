@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "channels",
+    "drf-spectacular",
     # Local apps
     "authapp",
     "restaurants",
@@ -121,7 +122,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,  # Customize page size
     "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",  # ISO-like readable format
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
 }
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Bistropulse Api 🚀',
+    'DESCRIPTION': 'Bistropulse Backend API endpoints 😊',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # Add more customizations if needed
+}
+
 
 
 # File upload limits

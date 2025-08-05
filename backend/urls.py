@@ -4,6 +4,13 @@ from django.conf import settings
 from django.views.static import serve
 from django.views.generic import TemplateView  # For health check
 
+# Spectacular imports 
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView
+    )
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("authapp.urls")),
@@ -19,6 +26,13 @@ urlpatterns = [
         TemplateView.as_view(template_name="health_check.html"),
         name="health-check",
     ),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
+
+
+    
     # Media serving in production (Render)
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
 ]
