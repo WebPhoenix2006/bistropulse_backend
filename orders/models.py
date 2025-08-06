@@ -57,6 +57,7 @@ class Order(models.Model):
             ("Delivered", "Delivered"),
         ],
         default="Placed",
+        max_length=30,
     )
     date_ordered = models.DateField(null=True, blank=True)
     date_delivered = models.DateField(null=True, blank=True)
@@ -68,6 +69,7 @@ class Order(models.Model):
             ("Bank Transfer", "Bank Transfer"),
         ],
         default="Cash in hand",
+        max_length=100,
     )
     payment_status = models.CharField(
         choices=[
@@ -75,6 +77,7 @@ class Order(models.Model):
             ("Complete", "Complete"),
         ],
         default="Pending",
+        max_length=30,
     )
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     platform_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)

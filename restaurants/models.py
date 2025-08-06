@@ -66,7 +66,7 @@ class Restaurant(models.Model):
 
 class FoodCategory(models.Model):
     restaurant = models.ForeignKey(
-        Restaurant, related_name="categories", on_delete=models.CASCADE
+        Restaurant, related_name="categories", on_delete=models.CASCADE, null=True, blank=True
     )
     name = models.CharField(max_length=100)
 

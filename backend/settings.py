@@ -3,6 +3,9 @@ Django settings for backend project.
 """
 
 import os
+import platform
+import sys
+
 from pathlib import Path
 from corsheaders.defaults import default_headers
 import dj_database_url
@@ -12,12 +15,32 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ⛰️ GIS Required Paths (Hardcoded for Windows local dev)
-os.environ["PATH"] += r";C:\OSGeo4W\bin"
-os.environ["PROJ_LIB"] = r"C:\OSGeo4W\share\proj"
-os.environ["GDAL_DATA"] = r"C:\OSGeo4W\share\gdal"
-os.environ["GDAL_LIBRARY_PATH"] = r"C:\OSGeo4W\bin\gdal311.dll"
-os.environ["GEOS_LIBRARY_PATH"] = r"C:\OSGeo4W\bin\geos_c.dll"
+
+import os
+
+# ⛰️ GIS Required Paths (Updated for Windows local dev)
+os.environ[
+    "PATH"
+] += r";C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo"
+
+# 👇 This should point directly to the GDAL DLL inside your venv
+GDAL_LIBRARY_PATH = (
+    r"C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo\gdal.dll"
+)
+
+# Optional but helpful if you're using projections or certain geospatial transforms
+os.environ["PROJ_LIB"] = (
+    r"C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo\data\proj"
+)
+os.environ["GDAL_DATA"] = (
+    r"C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo\data\gdal"
+)
+
+# If you're using GEOS (optional, for spatial lookups etc.)
+GEOS_LIBRARY_PATH = (
+    r"C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo\geos_c.dll"
+)
+
 
 # Security
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-dev-key")
