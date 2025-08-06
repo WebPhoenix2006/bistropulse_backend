@@ -4,18 +4,21 @@ from django.conf import settings
 from django.views.static import serve
 from django.views.generic import TemplateView  # For health check
 
-# Spectacular imports 
+# Spectacular imports
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
-    SpectacularSwaggerView
-    )
+    SpectacularSwaggerView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("authapp.urls")),
     path("api/restaurants/", include("restaurants.urls")),
-    path("<str:restaurant_id>/riders/", include("restaurants.riders_urls")),
+    path(
+        "api/restaurants/<str:restaurant_id>/riders/",
+        include("restaurants.riders_urls"),
+    ),
     path("api/riders/", include("restaurants.riders_urls")),  # ⬅️ Add this line
     path("api/customers/", include("customers.urls")),
     path("api/chat/", include("chat.urls")),
@@ -27,13 +30,12 @@ urlpatterns = [
         TemplateView.as_view(template_name="health_check.html"),
         name="health-check",
     ),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-
-
-
-    
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/docs/swagger/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
     # Media serving in production (Render)
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
 ]
