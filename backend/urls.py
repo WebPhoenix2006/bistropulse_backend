@@ -15,6 +15,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("authapp.urls")),
     path("api/restaurants/", include("restaurants.urls")),
+    path("<str:restaurant_id>/riders/", include("restaurants.riders_urls")),
     path("api/riders/", include("restaurants.riders_urls")),  # ⬅️ Add this line
     path("api/customers/", include("customers.urls")),
     path("api/chat/", include("chat.urls")),
