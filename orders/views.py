@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 
 from .serilalizers import OrderSerializer
 from .models import Order
-from restaurants.models import Rider  # or wherever your Rider model lives
+from restaurants.models import Restaurant, Rider  # or wherever your Rider model lives
 
 
 class OrderListCreateView(generics.ListCreateAPIView):

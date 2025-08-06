@@ -45,7 +45,6 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             "id",
-            "user",
             "rider", "rider_id",
             "customer", "customer_id",
             "branch", "branch_id",
