@@ -15,7 +15,6 @@ urlpatterns = [
 
     # Rider's assigned orders (aka deliveries)
     path("<str:rider_code>/deliveries/", RiderOrderListView.as_view(), name="rider-deliveries"),
-        path('api/restaurants/<str:restaurant_id>/riders/<str:rider_id>/deliveries/', RiderOrderCreateView.as_view(), name='create-rider-order'),
 
 
     # Other stuff
