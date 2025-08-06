@@ -25,9 +25,6 @@ class Order(models.Model):
         editable=False,
         default=generate_unique_id,
     )
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
-    )
     rider = models.ForeignKey(
         Rider, on_delete=models.CASCADE, null=True, blank=True, related_name="orders"
     )
@@ -57,9 +54,9 @@ class Order(models.Model):
             ("Accepted", "Accepted"),
             ("Being Prepared", "Being Prepared"),
             ("On the way", "On the way"),
-            ("Delivered", "Delivered")
+            ("Delivered", "Delivered"),
         ],
-        default="Placed"
+        default="Placed",
     )
     date_ordered = models.DateField(null=True, blank=True)
     date_delivered = models.DateField(null=True, blank=True)
@@ -70,14 +67,14 @@ class Order(models.Model):
             ("Paypal", "Paypal"),
             ("Bank Transfer", "Bank Transfer"),
         ],
-        default="Cash in hand"
+        default="Cash in hand",
     )
     payment_status = models.CharField(
         choices=[
             ("Pending", "Pending"),
             ("Complete", "Complete"),
         ],
-        default="Pending"
+        default="Pending",
     )
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     platform_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
