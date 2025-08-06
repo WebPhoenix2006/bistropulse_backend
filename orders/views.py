@@ -80,3 +80,28 @@ class RiderOrderListView(generics.ListAPIView):
 
         else:
             raise PermissionDenied("You do not have permission to view this rider's orders.")
+
+class RiderOrderCreateView(generics.CreateAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+
+        if user.role != 'manager':
+            raise PermissionDenied("Only managers can create orders.")
+
+        restaurant_id = self.kwargs.get('restaurant_id')
+        rider_id = self.kwargs.get('rider_id')
+
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        rider = get_object_or_404(Rider, id=rider_id)
+
+        # Make sure the manager is posting to their own restaurant
+        if not hasattr(user, 'restaurant') or user.restaurant.id != restaurant.id:
+            raise PermissionDenied("You can only create orders for your own restaurant.")
+
+        if rider.restaurant.id != restaurant.id:
+            raise PermissionDenied("This rider does not belong to your restaurant.")
+
+        serializer.save(restaurant=restaurant, rider=rider)

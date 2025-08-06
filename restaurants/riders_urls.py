@@ -7,7 +7,7 @@ from .views import (
     EndRiderShiftView,
     RiderShiftListView,
 )
-from orders.views import RiderOrderListView
+from orders.views import RiderOrderCreateView, RiderOrderListView
 
 urlpatterns = [
     path("", RiderListCreateView.as_view(), name="rider-list-create"),
@@ -15,6 +15,8 @@ urlpatterns = [
 
     # Rider's assigned orders (aka deliveries)
     path("<str:rider_code>/deliveries/", RiderOrderListView.as_view(), name="rider-deliveries"),
+        path('api/restaurants/<str:restaurant_id>/riders/<str:rider_id>/deliveries/', RiderOrderCreateView.as_view(), name='create-rider-order'),
+
 
     # Other stuff
     path("<str:rider_code>/toggle-active/", toggle_rider_active_status, name="rider-toggle-active"),
