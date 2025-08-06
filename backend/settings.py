@@ -17,29 +17,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 import os
+from ctypes.util import find_library
 
-# ⛰️ GIS Required Paths (Updated for Windows local dev)
-os.environ[
-    "PATH"
-] += r";C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo"
-
-# 👇 This should point directly to the GDAL DLL inside your venv
-GDAL_LIBRARY_PATH = (
-    r"C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo\gdal.dll"
-)
-
-# Optional but helpful if you're using projections or certain geospatial transforms
-os.environ["PROJ_LIB"] = (
-    r"C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo\data\proj"
-)
-os.environ["GDAL_DATA"] = (
-    r"C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo\data\gdal"
-)
-
-# If you're using GEOS (optional, for spatial lookups etc.)
-GEOS_LIBRARY_PATH = (
-    r"C:\WebPhoenix\bistropulse_backend\.venv\Lib\site-packages\osgeo\geos_c.dll"
-)
+if os.environ.get("RENDER") or os.environ.get("IS_RENDER"):  # set this in your Render env
+    # This will dynamically find GDAL path on Linux (Render)
+    gdal_lib = find_library("gdal")
+    if gdal_lib:
+        os.environ["GDAL_LIBRARY_PATH"] = gdal_lib
+    else:
+        raise RuntimeError("GDAL library not found on Render!")
 
 
 # Security
