@@ -7,6 +7,7 @@ from .views import (
     ExtraListCreateView,
     RestaurantFoodListCreateView,
     RiderListCreateView,
+    RiderRetrieveUpdateDestroyView,
 )
 from orders.views import OrderListCreateView
 
@@ -44,4 +45,9 @@ urlpatterns = [
     ),
     # Extras
     path("extras/", ExtraListCreateView.as_view(), name="extras"),
+    path(
+    "<str:restaurant_id>/riders/<str:rider_code>/",
+    RiderRetrieveUpdateDestroyView.as_view(),
+    name="restaurant-rider-detail",
+),
 ]
