@@ -151,6 +151,8 @@ class RiderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RiderSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+    lookup_field = 'rider_code'  # 👈🔥 This line allows you to look up each rider by their code instead of default django id: 1,2,3
+
 
     def get_queryset(self):
         return Rider.objects.filter(restaurant__user=self.request.user)
