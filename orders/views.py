@@ -44,9 +44,6 @@ class RiderOrderListView(generics.ListAPIView):
         user = self.request.user
         rider_id = self.kwargs.get('rider_id')
 
-        # Check if the user is an admin with a restaurant
-        if not hasattr(user, 'restaurant'):
-            raise PermissionDenied("You are not associated with any restaurant.")
 
         # Check if the rider exists and is part of the admin's restaurant
         rider = get_object_or_404(Rider, id=rider_id, restaurant=user.restaurant)
