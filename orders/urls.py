@@ -1,10 +1,25 @@
 from django.urls import path
-from .views import OrderListCreateView, RiderOrderListView
+from .views import (
+    OrderListCreateView,
+    OrderRetrieveUpdateDestroyView,
+    RiderOrderListView,
+    RiderOrderCreateView,
+    RiderOrderRetrieveUpdateDestroyView,
+)
 
 urlpatterns = [
-    # GET all orders & POST new ones (admin/restaurant only)
+    # GET all orders & POST new ones (admin/manager only)
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
 
-    # GET all orders assigned to a specific rider (admin view)
-    # path('riders/<int:rider_id>/deliveries/', RiderOrderListView.as_view(), name='rider-deliveries'),
+    # GET, PUT, PATCH, DELETE a specific order (admin/manager/rider)
+    path('orders/<int:pk>/', OrderRetrieveUpdateDestroyView.as_view(), name='order-detail'),
+
+    # GET all orders assigned to a specific rider (admin/manager)
+    path('riders/<int:rider_id>/deliveries/', RiderOrderListView.as_view(), name='rider-deliveries'),
+
+    # POST new order for a specific rider (manager only)
+    path('restaurants/<str:restaurant_id>/riders/<str:rider_id>/deliveries/', RiderOrderCreateView.as_view(), name='rider-order-create'),
+
+    # GET, PUT, PATCH, DELETE a specific order for a specific rider (admin/manager)
+    path('riders/<str:rider_id>/deliveries/<int:pk>/', RiderOrderRetrieveUpdateDestroyView.as_view(), name='rider-order-detail'),
 ]
