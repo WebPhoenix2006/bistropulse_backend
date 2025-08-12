@@ -8,6 +8,21 @@ from customers.serializers import CustomerSerializer
 from django.contrib.gis.geos import Point
 
 
+class FlexiblePKRelatedField(serializers.PrimaryKeyRelatedField):
+    """
+    Allows PK fields to accept both strings and integers.
+    """
+
+    def to_internal_value(self, data):
+        # Try to convert string PKs to integers
+        try:
+            if isinstance(data, str) and data.isdigit():
+                data = int(data)
+        except (ValueError, TypeError):
+            pass
+        return super().to_internal_value(data)
+
+
 class PointField(serializers.Field):
     def to_representation(self, value):
         if isinstance(value, Point):
@@ -27,13 +42,13 @@ class OrderSerializer(serializers.ModelSerializer):
     rider = RiderSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
 
-    rider_id = serializers.PrimaryKeyRelatedField(
+    rider_id = FlexiblePKRelatedField(
         queryset=Rider.objects.all(), write_only=True, required=False
     )
-    customer_id = serializers.PrimaryKeyRelatedField(
+    customer_id = FlexiblePKRelatedField(
         queryset=Customer.objects.all(), write_only=True
     )
-    branch_id = serializers.PrimaryKeyRelatedField(
+    branch_id = FlexiblePKRelatedField(
         queryset=Branch.objects.all(), write_only=True, required=False
     )
 
@@ -45,9 +60,12 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             "id",
-            "rider", "rider_id",
-            "customer", "customer_id",
-            "branch", "branch_id",
+            "rider",
+            "rider_id",
+            "customer",
+            "customer_id",
+            "branch",
+            "branch_id",
             "pickup_location",
             "dropoff_location",
             "current_location",
@@ -69,9 +87,6 @@ class OrderSerializer(serializers.ModelSerializer):
         branch = validated_data.pop("branch_id", None)
 
         order = Order.objects.create(
-            rider=rider,
-            customer=customer,
-            branch=branch,
-            **validated_data
+            rider=rider, customer=customer, branch=branch, **validated_data
         )
         return order
