@@ -10,16 +10,13 @@ from django.contrib.gis.geos import Point
 
 class FlexiblePKRelatedField(serializers.PrimaryKeyRelatedField):
     """
-    Allows PK fields to accept both strings and integers.
+    Allows PK fields to accept both strings and integers without forcing int conversion.
+    Works for CharField PKs like 'user_130379' and numeric PKs.
     """
-
     def to_internal_value(self, data):
-        # Try to convert string PKs to integers
-        try:
-            if isinstance(data, str) and data.isdigit():
-                data = int(data)
-        except (ValueError, TypeError):
-            pass
+        # If it's purely numeric, convert to int
+        if isinstance(data, str) and data.isdigit():
+            data = int(data)
         return super().to_internal_value(data)
 
 
@@ -30,6 +27,8 @@ class PointField(serializers.Field):
         return value
 
     def to_internal_value(self, data):
+        if not isinstance(data, dict):
+            raise serializers.ValidationError("Invalid coordinates format.")
         try:
             lat = float(data.get("lat"))
             lng = float(data.get("lng"))
@@ -86,7 +85,9 @@ class OrderSerializer(serializers.ModelSerializer):
         customer = validated_data.pop("customer_id")
         branch = validated_data.pop("branch_id", None)
 
-        order = Order.objects.create(
-            rider=rider, customer=customer, branch=branch, **validated_data
+        return Order.objects.create(
+            rider=rider,
+            customer=customer,
+            branch=branch,
+            **validated_data
         )
-        return order
