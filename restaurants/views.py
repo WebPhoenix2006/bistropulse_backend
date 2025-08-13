@@ -102,6 +102,56 @@ class RestaurantFoodListCreateView(generics.ListCreateAPIView):
 
     def get_serializer_context(self):
         return {"request": self.request}
+    
+ 
+class RestaurantCategoryFoodCreateView(APIView):
+    """
+    Create a FoodCategory and Food in a single request for a given restaurant.
+    Expected payload:
+    {
+        "category_name": "Burgers",
+        "food": {
+            "name": "Cheese Burger",
+            "description": "Juicy beef patty with cheese",
+            "price": 2500
+        }
+    }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, restaurant_id):
+        # Make sure the restaurant belongs to the logged-in user
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id, user=request.user)
+
+        category_name = request.data.get("category_name")
+        food_data = request.data.get("food")
+
+        if not category_name or not food_data:
+            return Response(
+                {"detail": "category_name and food are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create category
+        category = FoodCategory.objects.create(
+            restaurant=restaurant,
+            name=category_name
+        )
+
+        # Create food
+        food = Food.objects.create(
+            restaurant=restaurant,
+            category=category,
+            name=food_data.get("name"),
+            description=food_data.get("description"),
+            price=food_data.get("price"),
+        )
+
+        return Response({
+            "category": FoodCategorySerializer(category, context={"request": request}).data,
+            "food": FoodSerializer(food, context={"request": request}).data
+        }, status=status.HTTP_201_CREATED)
+    
 
 
 class ExtraListCreateView(generics.ListCreateAPIView):

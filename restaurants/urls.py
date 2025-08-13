@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    RestaurantCategoryFoodCreateView,
     RestaurantListCreateView,
     RestaurantRetrieveUpdateDestroyView,
     FoodCategoryListCreateView,
@@ -46,6 +47,11 @@ urlpatterns = [
         "<str:restaurant_id>/foods/",
         RestaurantFoodListCreateView.as_view(),
         name="restaurant-foods",
+    ),
+    path(
+        "<str:restaurant_id>/category-food/",
+        RestaurantCategoryFoodCreateView.as_view(),
+        name="restaurant-category-food-create",
     ),
     # Extras
     path("extras/", ExtraListCreateView.as_view(), name="extras"),
