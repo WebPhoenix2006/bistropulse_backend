@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from customers.models import Customer
 from franchise.models import Branch
-from orders.models import Order
+from orders.models import Order, OrderItem
 from restaurants.models import Rider, Restaurant
 from restaurants.serializers import RiderSerializer
 from customers.serializers import CustomerSerializer
@@ -41,6 +41,12 @@ class PointField(serializers.Field):
             raise serializers.ValidationError("Invalid coordinates format.")
 
 
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ["food", "quantity", "unit_price"]
+
+
 class OrderSerializer(serializers.ModelSerializer):
     rider = RiderSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
@@ -62,10 +68,18 @@ class OrderSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    restaurant_code = StringLookupRelatedField(
+        queryset=Restaurant.objects.all(),
+        lookup_field="restaurant_id",  # or change to your actual code field
+        write_only=True,
+        required=False
+    )
 
     pickup_location = PointField(required=False)
     dropoff_location = PointField(required=False)
     current_location = PointField(required=False)
+
+    items = OrderItemSerializer(many=True, write_only=True)
 
     class Meta:
         model = Order
@@ -75,7 +89,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "rider_code",
             "customer",
             "customer_code",
-            "restaurant",  # read-only
+            "restaurant",
+            "restaurant_code",
             "branch",
             "branch_code",
             "pickup_location",
@@ -90,22 +105,25 @@ class OrderSerializer(serializers.ModelSerializer):
             "platform_fee",
             "tax",
             "total",
+            "items",
         ]
         read_only_fields = ["id", "total", "rider", "customer", "branch", "restaurant"]
 
     def create(self, validated_data):
+        items_data = validated_data.pop("items", [])
         rider = validated_data.pop("rider_code", None)
         customer = validated_data.pop("customer_code")
         branch = validated_data.pop("branch_code", None)
+        restaurant = validated_data.pop("restaurant_code", None)
 
-        # Default: no branch → use restaurant_id from context
-        restaurant = None
-        restaurant_id = self.context.get("restaurant_id")
-        if not branch and restaurant_id:
-            try:
-                restaurant = Restaurant.objects.get(id=restaurant_id)
-            except Restaurant.DoesNotExist:
-                raise serializers.ValidationError({"restaurant_id": f"Restaurant with id '{restaurant_id}' does not exist."})
+        # Fallback: restaurant from context
+        if not branch and not restaurant:
+            restaurant_id = self.context.get("restaurant_id")
+            if restaurant_id:
+                try:
+                    restaurant = Restaurant.objects.get(id=restaurant_id)
+                except Restaurant.DoesNotExist:
+                    raise serializers.ValidationError({"restaurant_id": f"Restaurant with id '{restaurant_id}' does not exist."})
 
         order = Order.objects.create(
             rider=rider,
@@ -114,4 +132,9 @@ class OrderSerializer(serializers.ModelSerializer):
             restaurant=restaurant,
             **validated_data
         )
+
+        # Create order items
+        for item in items_data:
+            OrderItem.objects.create(order=order, **item)
+
         return order
