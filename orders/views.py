@@ -74,7 +74,7 @@ class OrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 class RestaurantOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = "id"
+    lookup_field = "order_id"
 
     def get_queryset(self):
         restaurant_id = self.kwargs.get("restaurant_id")

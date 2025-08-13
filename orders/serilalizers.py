@@ -12,6 +12,7 @@ class StringLookupRelatedField(serializers.RelatedField):
     """
     Allows related lookup by a unique string field (like 'customer_id' or 'rider_code').
     """
+
     def __init__(self, queryset, lookup_field, **kwargs):
         self.lookup_field = lookup_field
         super().__init__(queryset=queryset, **kwargs)
@@ -20,7 +21,9 @@ class StringLookupRelatedField(serializers.RelatedField):
         try:
             return self.get_queryset().get(**{self.lookup_field: data})
         except self.get_queryset().model.DoesNotExist:
-            raise serializers.ValidationError(f"{self.lookup_field} '{data}' does not exist.")
+            raise serializers.ValidationError(
+                f"{self.lookup_field} '{data}' does not exist."
+            )
 
     def to_representation(self, value):
         return getattr(value, self.lookup_field)
@@ -48,6 +51,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    order_id = serializers.CharField(read_only=True)
+
     rider = RiderSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
 
@@ -55,24 +60,22 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=Rider.objects.all(),
         lookup_field="rider_code",
         write_only=True,
-        required=False
+        required=False,
     )
     customer_code = StringLookupRelatedField(
-        queryset=Customer.objects.all(),
-        lookup_field="customer_id",
-        write_only=True
+        queryset=Customer.objects.all(), lookup_field="customer_id", write_only=True
     )
     branch_code = StringLookupRelatedField(
         queryset=Branch.objects.all(),
         lookup_field="branch_id",
         write_only=True,
-        required=False
+        required=False,
     )
     restaurant_code = StringLookupRelatedField(
         queryset=Restaurant.objects.all(),
         lookup_field="id",  # or change to your actual code field
         write_only=True,
-        required=False
+        required=False,
     )
 
     pickup_location = PointField(required=False)
@@ -85,6 +88,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             "id",
+            "order_id",
             "rider",
             "rider_code",
             "customer",
@@ -123,14 +127,18 @@ class OrderSerializer(serializers.ModelSerializer):
                 try:
                     restaurant = Restaurant.objects.get(id=restaurant_id)
                 except Restaurant.DoesNotExist:
-                    raise serializers.ValidationError({"restaurant_id": f"Restaurant with id '{restaurant_id}' does not exist."})
+                    raise serializers.ValidationError(
+                        {
+                            "restaurant_id": f"Restaurant with id '{restaurant_id}' does not exist."
+                        }
+                    )
 
         order = Order.objects.create(
             rider=rider,
             customer=customer,
             branch=branch,
             restaurant=restaurant,
-            **validated_data
+            **validated_data,
         )
 
         # Create order items
