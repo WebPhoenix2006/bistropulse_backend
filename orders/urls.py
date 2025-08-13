@@ -22,7 +22,7 @@ urlpatterns = [
     # Orders for a specific restaurant (by restaurant_id and order_id)
     # ----------------------------
     path(
-        "restaurants/<str:restaurant_id>/orders/<str:order_id>/",
+        "<str:restaurant_id>/orders/<str:order_id>/",
         RestaurantOrderRetrieveUpdateDestroyView.as_view(),
         name="restaurant-order-detail",
     ),
@@ -35,7 +35,7 @@ urlpatterns = [
         name="rider-deliveries",
     ),
     path(
-        "restaurants/<str:restaurant_id>/riders/<str:rider_id>/deliveries/",
+        "<str:restaurant_id>/riders/<str:rider_id>/deliveries/",
         RiderOrderCreateView.as_view(),
         name="rider-order-create",
     ),
