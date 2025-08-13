@@ -3,6 +3,7 @@ from django.db import models
 import random
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.forms import ValidationError
 from restaurants.models import Food, Restaurant, Rider
 from franchise.models import Branch
 from customers.models import Customer
@@ -88,6 +89,14 @@ class Order(models.Model):
         items_total = sum([item.total_price for item in self.items.all()])
         self.total = items_total + self.delivery_fee + self.platform_fee + self.tax
         self.save()
+
+    def clean(self):
+        if not self.restaurant and not self.branch:
+            raise ValidationError("Either restaurant or branch must be provided.")
+        if self.restaurant and self.branch:
+            raise ValidationError(
+                "Order can only be linked to one of restaurant or branch."
+            )
 
     def __str__(self):
         return f"Order {self.id} - {self.status}"
