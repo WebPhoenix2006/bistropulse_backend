@@ -40,7 +40,6 @@ class PointField(serializers.Field):
         except (TypeError, ValueError):
             raise serializers.ValidationError("Invalid coordinates format.")
 
-
 class OrderSerializer(serializers.ModelSerializer):
     rider = RiderSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
@@ -75,6 +74,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "rider_code",
             "customer",
             "customer_code",
+            "restaurant",  # keep for read-only display
             "branch",
             "branch_code",
             "pickup_location",
@@ -90,17 +90,24 @@ class OrderSerializer(serializers.ModelSerializer):
             "tax",
             "total",
         ]
-        read_only_fields = ["id", "total", "rider", "customer", "branch"]
+        read_only_fields = ["id", "total", "rider", "customer", "branch", "restaurant"]
 
     def create(self, validated_data):
         rider = validated_data.pop("rider_code", None)
         customer = validated_data.pop("customer_code")
         branch = validated_data.pop("branch_code", None)
 
+        # If branch is provided, set it and leave restaurant empty
+        restaurant = None
+        if not branch and self.context.get("restaurant_id"):
+            # If no branch, use the restaurant_id passed from view
+            restaurant = self.context.get("restaurant_id")
+
         order = Order.objects.create(
             rider=rider,
             customer=customer,
             branch=branch,
+            restaurant=restaurant,
             **validated_data
         )
         return order

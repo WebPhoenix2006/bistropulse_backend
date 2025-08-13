@@ -44,22 +44,16 @@ class OrderListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         user = self.request.user
 
-        if user.role in ["manager", "admin"]:
-            branch = serializer.validated_data.get("branch")
-            restaurant = serializer.validated_data.get("restaurant")
+        if user.role == "manager":
+            if hasattr(user, "restaurant"):
+                serializer.save(restaurant=user.restaurant)
+            elif hasattr(user, "branch"):
+                serializer.save(branch=user.branch)
+            else:
+                raise PermissionDenied("Manager is not linked to any restaurant or branch.")
 
-            if user.role == "manager":
-                # Managers should only link to their own restaurant/branch
-                if hasattr(user, "restaurant") and not restaurant:
-                    restaurant = user.restaurant
-                elif hasattr(user, "branch") and not branch:
-                    branch = user.branch
-                else:
-                    raise PermissionDenied(
-                        "Manager is not linked to any restaurant or branch."
-                    )
-
-            serializer.save(branch=branch, restaurant=restaurant)
+        elif user.role == "admin":
+            serializer.save()
 
         else:
             raise PermissionDenied("Only managers or admins can create orders.")
