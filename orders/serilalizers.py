@@ -8,16 +8,22 @@ from customers.serializers import CustomerSerializer
 from django.contrib.gis.geos import Point
 
 
-class FlexiblePKRelatedField(serializers.PrimaryKeyRelatedField):
+class StringLookupRelatedField(serializers.RelatedField):
     """
-    Allows PK fields to accept both strings and integers without forcing int conversion.
-    Works for CharField PKs like 'user_130379' and numeric PKs.
+    Allows related lookup by a unique string field (like 'customer_id' or 'rider_code').
     """
+    def __init__(self, queryset, lookup_field, **kwargs):
+        self.lookup_field = lookup_field
+        super().__init__(queryset=queryset, **kwargs)
+
     def to_internal_value(self, data):
-        # If it's purely numeric, convert to int
-        if isinstance(data, str) and data.isdigit():
-            data = int(data)
-        return super().to_internal_value(data)
+        try:
+            return self.get_queryset().get(**{self.lookup_field: data})
+        except self.get_queryset().model.DoesNotExist:
+            raise serializers.ValidationError(f"{self.lookup_field} '{data}' does not exist.")
+
+    def to_representation(self, value):
+        return getattr(value, self.lookup_field)
 
 
 class PointField(serializers.Field):
@@ -27,8 +33,6 @@ class PointField(serializers.Field):
         return value
 
     def to_internal_value(self, data):
-        if not isinstance(data, dict):
-            raise serializers.ValidationError("Invalid coordinates format.")
         try:
             lat = float(data.get("lat"))
             lng = float(data.get("lng"))
@@ -41,14 +45,22 @@ class OrderSerializer(serializers.ModelSerializer):
     rider = RiderSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
 
-    rider_id = FlexiblePKRelatedField(
-        queryset=Rider.objects.all(), write_only=True, required=False
+    rider_code = StringLookupRelatedField(
+        queryset=Rider.objects.all(),
+        lookup_field="rider_code",
+        write_only=True,
+        required=False
     )
-    customer_id = FlexiblePKRelatedField(
-        queryset=Customer.objects.all(), write_only=True
+    customer_code = StringLookupRelatedField(
+        queryset=Customer.objects.all(),
+        lookup_field="customer_id",
+        write_only=True
     )
-    branch_id = FlexiblePKRelatedField(
-        queryset=Branch.objects.all(), write_only=True, required=False
+    branch_code = StringLookupRelatedField(
+        queryset=Branch.objects.all(),
+        lookup_field="branch_id",
+        write_only=True,
+        required=False
     )
 
     pickup_location = PointField(required=False)
@@ -60,11 +72,11 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "rider",
-            "rider_id",
+            "rider_code",
             "customer",
-            "customer_id",
+            "customer_code",
             "branch",
-            "branch_id",
+            "branch_code",
             "pickup_location",
             "dropoff_location",
             "current_location",
@@ -81,13 +93,14 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "total", "rider", "customer", "branch"]
 
     def create(self, validated_data):
-        rider = validated_data.pop("rider_id", None)
-        customer = validated_data.pop("customer_id")
-        branch = validated_data.pop("branch_id", None)
+        rider = validated_data.pop("rider_code", None)
+        customer = validated_data.pop("customer_code")
+        branch = validated_data.pop("branch_code", None)
 
-        return Order.objects.create(
+        order = Order.objects.create(
             rider=rider,
             customer=customer,
             branch=branch,
             **validated_data
         )
+        return order
