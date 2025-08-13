@@ -1,7 +1,7 @@
 # Use a slim Python image
 FROM python:3.11-slim
 
-# Prevents Python from writing pyc files & buffering stdout/stderr
+# Prevent Python from writing pyc files & buffering stdout/stderr
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
@@ -24,10 +24,10 @@ ENV C_INCLUDE_PATH=/usr/include/gdal
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
 
 # Copy project files
 COPY . .
 
-# Default command: run migrations then start server
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+# Default command: run migrations then start Daphne server
+CMD ["sh", "-c", "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 backend.asgi:application"]
