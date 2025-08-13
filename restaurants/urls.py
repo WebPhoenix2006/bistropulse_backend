@@ -10,7 +10,11 @@ from .views import (
     RiderListCreateView,
     RiderRetrieveUpdateDestroyView,
 )
-from orders.views import OrderListCreateView, RiderOrderCreateView
+from orders.views import (
+    OrderListCreateView,
+    RestaurantOrderRetrieveUpdateDestroyView,
+    RiderOrderCreateView,
+)
 
 urlpatterns = [
     # Restaurants
@@ -31,6 +35,11 @@ urlpatterns = [
         "<str:restaurant_id>/orders/",
         OrderListCreateView.as_view(),
         name="restaurant-orders",
+    ),
+    path(
+        "<str:restaurant_id>/orders/<str:order_id>/",
+        RestaurantOrderRetrieveUpdateDestroyView.as_view(),
+        name="restaurant-order-detail",
     ),
     path(
         "<str:restaurant_id>/riders/<str:rider_id>/deliveries/",
