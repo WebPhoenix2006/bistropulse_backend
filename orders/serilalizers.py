@@ -2,7 +2,7 @@ from rest_framework import serializers
 from customers.models import Customer
 from franchise.models import Branch
 from orders.models import Order
-from restaurants.models import Rider
+from restaurants.models import Rider, Restaurant
 from restaurants.serializers import RiderSerializer
 from customers.serializers import CustomerSerializer
 from django.contrib.gis.geos import Point
@@ -40,6 +40,7 @@ class PointField(serializers.Field):
         except (TypeError, ValueError):
             raise serializers.ValidationError("Invalid coordinates format.")
 
+
 class OrderSerializer(serializers.ModelSerializer):
     rider = RiderSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
@@ -74,7 +75,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "rider_code",
             "customer",
             "customer_code",
-            "restaurant",  # keep for read-only display
+            "restaurant",  # read-only
             "branch",
             "branch_code",
             "pickup_location",
@@ -97,11 +98,14 @@ class OrderSerializer(serializers.ModelSerializer):
         customer = validated_data.pop("customer_code")
         branch = validated_data.pop("branch_code", None)
 
-        # If branch is provided, set it and leave restaurant empty
+        # Default: no branch → use restaurant_id from context
         restaurant = None
-        if not branch and self.context.get("restaurant_id"):
-            # If no branch, use the restaurant_id passed from view
-            restaurant = self.context.get("restaurant_id")
+        restaurant_id = self.context.get("restaurant_id")
+        if not branch and restaurant_id:
+            try:
+                restaurant = Restaurant.objects.get(id=restaurant_id)
+            except Restaurant.DoesNotExist:
+                raise serializers.ValidationError({"restaurant_id": f"Restaurant with id '{restaurant_id}' does not exist."})
 
         order = Order.objects.create(
             rider=rider,
