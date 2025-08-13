@@ -12,7 +12,7 @@ urlpatterns = [
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
 
     # GET, PUT, PATCH, DELETE a specific order (admin/manager/rider)
-    path('orders/<int:pk>/', OrderRetrieveUpdateDestroyView.as_view(), name='order-detail'),
+    path('orders/<str:order_id>/', OrderRetrieveUpdateDestroyView.as_view(), name='order-detail'),
 
     # GET all orders assigned to a specific rider (admin/manager)
     path('riders/<int:rider_id>/deliveries/', RiderOrderListView.as_view(), name='rider-deliveries'),

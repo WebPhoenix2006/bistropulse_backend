@@ -50,7 +50,7 @@ class OrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
     queryset = Order.objects.all()
-    lookup_field = "pk"
+    lookup_field = "order_id"
 
     def get_object(self):
         order = super().get_object()
