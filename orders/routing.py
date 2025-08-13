@@ -4,9 +4,6 @@ from . import consumers  # OrderTrackingConsumer
 from chat import consumers as chat_consumers  # Your TestConsumer
 
 websocket_urlpatterns = [
-    # Main order tracking WebSocket
-    re_path(r'ws/orders/(?P<order_id>\w+)/$', consumers.OrderTrackingConsumer.as_asgi()),
-
-    # Test WebSocket route (from your old backend.routing)
-    path("ws/test/", consumers.TestConsumer.as_asgi()),  # Temporary test route
+    re_path(r"ws/orders/(?P<order_id>\d+)/$", consumers.OrderTrackingConsumer.as_asgi()),
+    re_path(r"ws/restaurant/(?P<restaurant_id>\d+)/$", consumers.RestaurantOrdersConsumer.as_asgi()),
 ]

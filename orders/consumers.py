@@ -57,3 +57,22 @@ class OrderTrackingConsumer(AsyncWebsocketConsumer):
 
     async def send_order_update(self, event):
         await self.send(text_data=json.dumps(event['data']))
+
+
+
+class RestaurantOrdersConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.restaurant_id = self.scope['url_route']['kwargs']['restaurant_id']
+        self.room_group_name = f"restaurant_{self.restaurant_id}"
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+
+    async def receive(self, text_data):
+        print(f"Client sent in restaurant {self.restaurant_id} group:", text_data)
+
+    async def send_order_update(self, event):
+        await self.send(text_data=json.dumps(event['data']))

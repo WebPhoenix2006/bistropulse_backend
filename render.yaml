@@ -14,7 +14,7 @@ services:
       mkdir -p /var/data/media
       chmod -R 755 /var/data
       python manage.py migrate
-      gunicorn backend.wsgi:application
+      daphne backend.asgi:application --port $PORT --bind 0.0.0.0
 
     envVars:
       - key: DEBUG
@@ -29,6 +29,11 @@ services:
         value: "10485760"
       - key: DATABASE_URL
         value: postgresql://bistropulse_db_user:5ONLH0AuW6VFPOXbkYTXoCYpeRCffTdR@dpg-d1f3vtqdbo4c739iik7g-a/bistropulse_db
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: bistropulse_redis
+          property: connectionString
 
     disk:
       name: media_volume
@@ -45,3 +50,7 @@ services:
 
     healthCheckPath: /api/health/
     healthCheckTimeout: 90
+
+  - type: redis
+    name: bistropulse_redis
+    plan: free
