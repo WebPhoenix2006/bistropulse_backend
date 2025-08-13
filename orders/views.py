@@ -12,21 +12,11 @@ from restaurants.models import Restaurant, Rider  # Adjust if located elsewhere
 # List + Create Orders (General)
 # ===========================
 class OrderListCreateView(generics.ListCreateAPIView):
-    """
-    GET:
-        - Admin: See all orders
-        - Manager: See orders for their restaurant
-        - Rider: See only their own orders
-    POST:
-        - Manager only: Create order under their restaurant
-    """
-
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-
         if user.role == "admin":
             return Order.objects.all().order_by("-date_ordered")
         elif user.role == "manager":
@@ -38,25 +28,19 @@ class OrderListCreateView(generics.ListCreateAPIView):
         elif user.role == "rider":
             rider = get_object_or_404(Rider, user=user)
             return Order.objects.filter(rider=rider).order_by("-date_ordered")
-
         return Order.objects.none()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if hasattr(self.request.user, "restaurant"):
+            context["restaurant_id"] = self.request.user.restaurant.id
+        return context
 
     def perform_create(self, serializer):
         user = self.request.user
-
-        if user.role == "manager":
-            if hasattr(user, "restaurant"):
-                serializer.save(restaurant=user.restaurant)
-            elif hasattr(user, "branch"):
-                serializer.save(branch=user.branch)
-            else:
-                raise PermissionDenied("Manager is not linked to any restaurant or branch.")
-
-        elif user.role == "admin":
-            serializer.save()
-
-        else:
+        if user.role not in ["manager", "admin"]:
             raise PermissionDenied("Only managers or admins can create orders.")
+        serializer.save()
 
 
 # ===========================
