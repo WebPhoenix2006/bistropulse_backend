@@ -73,7 +73,7 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     restaurant_code = StringLookupRelatedField(
         queryset=Restaurant.objects.all(),
-        lookup_field="id",  # or change to your actual code field
+        lookup_field="restaurant_id",  # or change to your actual code field
         write_only=True,
         required=False,
     )
