@@ -11,17 +11,17 @@ from .views import (
 urlpatterns = [
     # GET all orders & POST new ones (admin/manager only)
     path("orders/", OrderListCreateView.as_view(), name="order-list-create"),
-    # GET, PUT, PATCH, DELETE a specific order (admin/manager/rider)
-    path(
-        "orders/<str:order_id>/",
-        OrderRetrieveUpdateDestroyView.as_view(),
-        name="order-detail",
-    ),
     # GET/PUT/PATCH/DELETE a specific order by order_id for a restaurant
     path(
         "restaurants/<str:restaurant_id>/orders/<str:order_id>/",
         RestaurantOrderRetrieveUpdateDestroyView.as_view(),
         name="restaurant-order-detail",
+    ),
+    # GET, PUT, PATCH, DELETE a specific order (admin/manager/rider)
+    path(
+        "orders/<str:order_id>/",
+        OrderRetrieveUpdateDestroyView.as_view(),
+        name="order-detail",
     ),
     # GET all orders assigned to a specific rider (admin/manager)
     path(
