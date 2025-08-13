@@ -110,7 +110,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total",
             "items",
         ]
-        read_only_fields = ["id", "total", "rider", "customer", "branch", "restaurant"]
+        read_only_fields = ["total", "rider", "customer", "branch", "restaurant"]
 
     def create(self, validated_data):
         items_data = validated_data.pop("items", [])
