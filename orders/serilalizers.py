@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from customers.models import Customer
 from franchise.models import Branch
-from orders.models import Order, OrderItem
+from orders.models import Order, Item
 from restaurants.models import Rider, Restaurant
 from restaurants.serializers import RiderSerializer
 from customers.serializers import CustomerSerializer
@@ -43,7 +43,7 @@ class PointField(serializers.Field):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OrderItem
+        model = Item
         fields = ["food", "quantity", "unit_price"]
 
 
@@ -135,6 +135,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
         # Create order items
         for item in items_data:
-            OrderItem.objects.create(order=order, **item)
+            Item.objects.create(order=order, **item)
 
         return order
