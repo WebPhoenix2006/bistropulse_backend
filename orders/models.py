@@ -19,7 +19,7 @@ def generate_unique_id():
 
 
 class Order(models.Model):
-    id = models.CharField(
+    order_id = models.CharField(
         primary_key=True,
         max_length=10,
         unique=True,
