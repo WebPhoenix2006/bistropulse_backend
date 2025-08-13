@@ -71,6 +71,28 @@ class OrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             raise PermissionDenied("You do not have permission to access this order.")
 
 
+class RestaurantOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "order_id"
+
+    def get_queryset(self):
+        restaurant_id = self.kwargs.get("restaurant_id")
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        user = self.request.user
+
+        if user.role == "admin":
+            return Order.objects.filter(restaurant=restaurant)
+        elif user.role == "manager":
+            if not hasattr(user, "restaurant") or user.restaurant.id != restaurant.id:
+                raise PermissionDenied(
+                    "You can only manage orders for your own restaurant."
+                )
+            return Order.objects.filter(restaurant=restaurant)
+        else:
+            raise PermissionDenied("You do not have permission to manage this order.")
+
+
 # ===========================
 # List Orders for a Specific Rider
 # ===========================
