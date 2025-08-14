@@ -16,13 +16,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # =========================
 # Render-specific GDAL setup
 # =========================
-if os.environ.get("RENDER") or os.environ.get("IS_RENDER"):  # set in Render env
-    gdal_lib = find_library("gdal")
-    if gdal_lib:
-        os.environ["GDAL_LIBRARY_PATH"] = gdal_lib
-    else:
-        raise RuntimeError("GDAL library not found on Render!")
 
+RENDER = os.environ.get("RENDER") or os.environ.get("IS_RENDER")
+
+if RENDER:
+    # Auto-detect GDAL and GEOS on Render
+    gdal_lib = find_library("gdal")
+    geos_lib = find_library("geos_c")  # note: geos_c, not geos
+
+    if not gdal_lib or not geos_lib:
+        raise RuntimeError(
+            f"Missing GIS libraries on Render: GDAL={gdal_lib}, GEOS={geos_lib}"
+        )
+
+    GDAL_LIBRARY_PATH = gdal_lib
+    GEOS_LIBRARY_PATH = geos_lib
+else:
+    # Local dev: point to venv versions
+    GDAL_LIBRARY_PATH = str(
+        BASE_DIR / ".venv" / "Lib" / "site-packages" / "osgeo" / "gdal.dll"
+    )
+    GEOS_LIBRARY_PATH = str(
+        BASE_DIR / ".venv" / "Lib" / "site-packages" / "osgeo" / "geos_c.dll"
+    )
 # =========================
 # Security
 # =========================
@@ -33,7 +49,9 @@ ALLOWED_HOSTS = ["*"]  # Consider restricting to prod domain later
 # =========================
 # File storage
 # =========================
-MEDIA_ROOT = "/var/data/media" if os.environ.get("RENDER") else os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = (
+    "/var/data/media" if os.environ.get("RENDER") else os.path.join(BASE_DIR, "media")
+)
 MEDIA_URL = "/media/"
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
@@ -56,14 +74,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",
-    
     # Third-party apps
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
     "channels",
     "drf_spectacular",
-    
     # Your apps
     "authapp",
     "restaurants",
