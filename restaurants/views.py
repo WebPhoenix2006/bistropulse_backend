@@ -1,4 +1,3 @@
-# views.py
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -6,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.utils import timezone
+from django.conf import settings
 
 from .models import (
     Restaurant,
@@ -24,8 +24,21 @@ from .serializers import (
     RiderSerializer,
     ShiftTypeSerializer,
     RiderShiftSerializer,
-    
 )
+
+
+# 🔒 Helper: Force HTTPS for any URL in response data
+def enforce_https_in_response(data):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if isinstance(value, str) and value.startswith("http://"):
+                data[key] = value.replace("http://", "https://", 1)
+            elif isinstance(value, (dict, list)):
+                enforce_https_in_response(value)
+    elif isinstance(data, list):
+        for item in data:
+            enforce_https_in_response(item)
+    return data
 
 
 class RestaurantListCreateView(generics.ListCreateAPIView):
@@ -102,8 +115,8 @@ class RestaurantFoodListCreateView(generics.ListCreateAPIView):
 
     def get_serializer_context(self):
         return {"request": self.request}
-    
- 
+
+
 class RestaurantCategoryFoodCreateView(APIView):
     """
     Create a FoodCategory and Food in a single request for a given restaurant.
@@ -117,10 +130,10 @@ class RestaurantCategoryFoodCreateView(APIView):
         }
     }
     """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, restaurant_id):
-        # Make sure the restaurant belongs to the logged-in user
         restaurant = get_object_or_404(Restaurant, id=restaurant_id, user=request.user)
 
         category_name = request.data.get("category_name")
@@ -129,16 +142,13 @@ class RestaurantCategoryFoodCreateView(APIView):
         if not category_name or not food_data:
             return Response(
                 {"detail": "category_name and food are required."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Create category
         category = FoodCategory.objects.create(
-            restaurant=restaurant,
-            name=category_name
+            restaurant=restaurant, name=category_name
         )
 
-        # Create food
         food = Food.objects.create(
             restaurant=restaurant,
             category=category,
@@ -147,11 +157,16 @@ class RestaurantCategoryFoodCreateView(APIView):
             price=food_data.get("price"),
         )
 
-        return Response({
-            "category": FoodCategorySerializer(category, context={"request": request}).data,
-            "food": FoodSerializer(food, context={"request": request}).data
-        }, status=status.HTTP_201_CREATED)
-    
+        response_data = {
+            "category": FoodCategorySerializer(
+                category, context={"request": request}
+            ).data,
+            "food": FoodSerializer(food, context={"request": request}).data,
+        }
+
+        return Response(
+            enforce_https_in_response(response_data), status=status.HTTP_201_CREATED
+        )
 
 
 class ExtraListCreateView(generics.ListCreateAPIView):
@@ -180,7 +195,7 @@ class RiderListCreateView(generics.ListCreateAPIView):
         restaurant_id = self.kwargs.get("restaurant_id")
         if restaurant_id:
             restaurant = Restaurant.objects.filter(
-                id=restaurant_id, user=self.request.user
+                restaurant_id=restaurant_id, user=self.request.user
             ).first()
             if not restaurant:
                 raise serializers.ValidationError(
@@ -191,7 +206,7 @@ class RiderListCreateView(generics.ListCreateAPIView):
             serializer.validated_data.pop("restaurant", None)
             serializer.save(restaurant=restaurant)
         else:
-            serializer.save()  # Restaurant must be passed via form if not in URL
+            serializer.save()
 
     def get_serializer_context(self):
         return {"request": self.request}
@@ -201,8 +216,7 @@ class RiderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RiderSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
-    lookup_field = 'rider_code'  # 👈🔥 This line allows you to look up each rider by their code instead of default django id: 1,2,3
-
+    lookup_field = "rider_code"
 
     def get_queryset(self):
         return Rider.objects.filter(restaurant__user=self.request.user)
@@ -225,7 +239,7 @@ class RestaurantRiderListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         restaurant_id = self.kwargs.get("restaurant_id")
         restaurant = Restaurant.objects.filter(
-            id=restaurant_id, user=self.request.user
+            restaurant_id=restaurant_id, user=self.request.user
         ).first()
         if not restaurant:
             raise serializers.ValidationError(
@@ -234,7 +248,6 @@ class RestaurantRiderListView(generics.ListCreateAPIView):
                 }
             )
 
-        # Prevent required field error
         serializer.validated_data.pop("restaurant", None)
         serializer.save(restaurant=restaurant)
 
@@ -302,7 +315,7 @@ class StartRiderShiftView(APIView):
             rider=rider, shift_type=shift_type, started_by=request.user
         )
         serializer = RiderShiftSerializer(shift, context={"request": request})
-        return Response(serializer.data, status=201)
+        return Response(enforce_https_in_response(serializer.data), status=201)
 
 
 class EndRiderShiftView(APIView):
@@ -326,6 +339,4 @@ class EndRiderShiftView(APIView):
         shift.save()
 
         serializer = RiderShiftSerializer(shift, context={"request": request})
-        return Response(serializer.data, status=200)
-
-
+        return Response(enforce_https_in_response(serializer.data), status=200)
