@@ -10,7 +10,7 @@ User = get_user_model()
 def generate_unique_id():
     while True:
         new_id = f"B{random.randint(1000, 9999)}"
-        if not Restaurant.objects.filter(id=new_id).exists():
+        if not Restaurant.objects.filter(restaurant_id=new_id).exists():
             return new_id
 
 
