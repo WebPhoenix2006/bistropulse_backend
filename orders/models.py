@@ -14,7 +14,7 @@ User = get_user_model()
 def generate_unique_id():
     while True:
         new_id = f"BO{random.randint(1000000, 9999999)}"
-        if not Order.objects.filter(id=new_id).exists():
+        if not Order.objects.filter(order_id=new_id).exists():
             return new_id
 
 
