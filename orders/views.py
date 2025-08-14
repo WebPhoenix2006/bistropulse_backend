@@ -78,7 +78,7 @@ class RestaurantOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPI
 
     def get_queryset(self):
         restaurant_id = self.kwargs.get("restaurant_id")
-        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        restaurant = get_object_or_404(Restaurant, restaurant_idid=restaurant_id)
         user = self.request.user
 
         if user.role == "admin":
