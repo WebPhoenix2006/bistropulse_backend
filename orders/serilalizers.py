@@ -124,7 +124,7 @@ class OrderSerializer(serializers.ModelSerializer):
             restaurant_id = self.context.get("restaurant_id")
             if restaurant_id:
                 try:
-                    restaurant = Restaurant.objects.get(restaurant_idid=restaurant_id)
+                    restaurant = Restaurant.objects.get(restaurant_id=restaurant_id)
                 except Restaurant.DoesNotExist:
                     raise serializers.ValidationError(
                         {
