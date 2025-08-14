@@ -58,10 +58,14 @@ class RiderSerializer(serializers.ModelSerializer):
     profile_image = serializers.ImageField(required=False)
     profile_image_url = serializers.SerializerMethodField()
 
+    # Use SlugRelatedField for restaurant to match custom PK
+    restaurant = serializers.SlugRelatedField(
+        queryset=Restaurant.objects.all(), slug_field="restaurant_id"
+    )
+
     class Meta:
         model = Rider
         fields = [
-            "id",
             "rider_code",
             "full_name",
             "phone",
@@ -72,12 +76,8 @@ class RiderSerializer(serializers.ModelSerializer):
             "address",
             "restaurant",
             "is_active",
-            "orders",
         ]
         read_only_fields = ["rider_code"]
-        extra_kwargs = {
-            "restaurant": {"required": False},
-        }
 
     def get_profile_image_url(self, obj):
         request = self.context.get("request")
@@ -147,7 +147,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = [
-            "restaurant_id",
+            "restaurant_id",  # custom PK
             "name",
             "representative",
             "phone",
@@ -211,4 +211,3 @@ class RestaurantSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-

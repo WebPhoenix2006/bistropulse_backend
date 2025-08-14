@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from customers.models import Customer
 from franchise.models import Branch
@@ -9,9 +10,7 @@ from django.contrib.gis.geos import Point
 
 
 class StringLookupRelatedField(serializers.RelatedField):
-    """
-    Allows related lookup by a unique string field (like 'customer_id' or 'rider_code').
-    """
+    """Allows related lookup by a unique string field (like 'customer_id' or 'rider_code')."""
 
     def __init__(self, queryset, lookup_field, **kwargs):
         self.lookup_field = lookup_field
@@ -73,7 +72,7 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     restaurant_code = StringLookupRelatedField(
         queryset=Restaurant.objects.all(),
-        lookup_field="restaurant_id",  # or change to your actual code field
+        lookup_field="restaurant_id",
         write_only=True,
         required=False,
     )
@@ -123,14 +122,7 @@ class OrderSerializer(serializers.ModelSerializer):
         if not branch and not restaurant:
             restaurant_id = self.context.get("restaurant_id")
             if restaurant_id:
-                try:
-                    restaurant = Restaurant.objects.get(restaurant_id=restaurant_id)
-                except Restaurant.DoesNotExist:
-                    raise serializers.ValidationError(
-                        {
-                            "restaurant_id": f"Restaurant with id '{restaurant_id}' does not exist."
-                        }
-                    )
+                restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id)
 
         order = Order.objects.create(
             rider=rider,
