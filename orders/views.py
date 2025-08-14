@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 
 from .serilalizers import OrderSerializer
 from .models import Order
-from restaurants.models import Restaurant, Rider  # Adjust if located elsewhere
+from restaurants.models import Restaurant, Rider
 
 
 # ===========================
@@ -33,7 +33,8 @@ class OrderListCreateView(generics.ListCreateAPIView):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if hasattr(self.request.user, "restaurant"):
-            context["restaurant_id"] = self.request.user.restaurant.id
+            # FIX: use restaurant_id instead of PK id for consistency
+            context["restaurant_id"] = self.request.user.restaurant.restaurant_id
         return context
 
     def perform_create(self, serializer):
@@ -50,7 +51,7 @@ class OrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
     queryset = Order.objects.all()
-    lookup_field = "order_id"
+    lookup_field = "order_id"  # matches custom order_id field
 
     def get_object(self):
         order = super().get_object()
@@ -59,7 +60,11 @@ class OrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if user.role == "admin":
             return order
         elif user.role == "manager":
-            if not hasattr(user, "restaurant") or order.restaurant != user.restaurant:
+            if (
+                not hasattr(user, "restaurant")
+                or order.restaurant.restaurant_id != user.restaurant.restaurant_id
+            ):
+                # FIX: Compare using restaurant_id instead of PK id
                 raise PermissionDenied("This order doesn't belong to your restaurant.")
             return order
         elif user.role == "rider":
@@ -71,6 +76,9 @@ class OrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             raise PermissionDenied("You do not have permission to access this order.")
 
 
+# ===========================
+# Retrieve/Update/Delete Orders for a Specific Restaurant
+# ===========================
 class RestaurantOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -78,13 +86,18 @@ class RestaurantOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPI
 
     def get_queryset(self):
         restaurant_id = self.kwargs.get("restaurant_id")
-        restaurant = get_object_or_404(Restaurant, restaurant_idid=restaurant_id)
+        # FIX: Typo corrected from restaurant_idid → restaurant_id
+        restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id)
         user = self.request.user
 
         if user.role == "admin":
             return Order.objects.filter(restaurant=restaurant)
         elif user.role == "manager":
-            if not hasattr(user, "restaurant") or user.restaurant.id != restaurant.id:
+            # FIX: Compare restaurant_id instead of PK id
+            if (
+                not hasattr(user, "restaurant")
+                or user.restaurant.restaurant_id != restaurant.restaurant_id
+            ):
                 raise PermissionDenied(
                     "You can only manage orders for your own restaurant."
                 )
@@ -108,12 +121,16 @@ class RiderOrderListView(generics.ListAPIView):
         user = self.request.user
         rider_id = self.kwargs.get("rider_id")
 
-        rider = get_object_or_404(Rider, id=rider_id)
+        rider = get_object_or_404(Rider, id=rider_id)  # still uses PK for Rider lookup
 
         if user.role == "admin":
             return Order.objects.filter(rider=rider).order_by("-date_ordered")
         elif user.role == "manager":
-            if not hasattr(user, "restaurant") or rider.restaurant != user.restaurant:
+            if (
+                not hasattr(user, "restaurant")
+                or rider.restaurant.restaurant_id != user.restaurant.restaurant_id
+            ):
+                # FIX: Compare restaurant_id for consistency
                 raise PermissionDenied("This rider does not belong to your restaurant.")
             return Order.objects.filter(rider=rider).order_by("-date_ordered")
 
@@ -138,14 +155,18 @@ class RiderOrderCreateView(generics.CreateAPIView):
         restaurant_id = self.kwargs.get("restaurant_id")
         rider_id = self.kwargs.get("rider_id")
 
-        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        # FIX: Get restaurant by restaurant_id instead of PK
+        restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id)
         rider = get_object_or_404(Rider, id=rider_id)
 
-        if not hasattr(user, "restaurant") or user.restaurant.id != restaurant.id:
+        if (
+            not hasattr(user, "restaurant")
+            or user.restaurant.restaurant_id != restaurant.restaurant_id
+        ):
             raise PermissionDenied(
                 "You can only create orders for your own restaurant."
             )
-        if rider.restaurant.id != restaurant.id:
+        if rider.restaurant.restaurant_id != restaurant.restaurant_id:
             raise PermissionDenied("This rider does not belong to your restaurant.")
 
         serializer.save(restaurant=restaurant, rider=rider)
@@ -157,7 +178,7 @@ class RiderOrderCreateView(generics.CreateAPIView):
 class RiderOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = "pk"
+    lookup_field = "pk"  # could also be order_id for consistency
 
     def get_queryset(self):
         user = self.request.user
@@ -168,7 +189,11 @@ class RiderOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView)
         if user.role == "admin":
             return Order.objects.filter(rider=rider)
         elif user.role == "manager":
-            if not hasattr(user, "restaurant") or rider.restaurant != user.restaurant:
+            if (
+                not hasattr(user, "restaurant")
+                or rider.restaurant.restaurant_id != user.restaurant.restaurant_id
+            ):
+                # FIX: Compare restaurant_id
                 raise PermissionDenied("You do not have access to this rider's orders.")
             return Order.objects.filter(rider=rider)
 
