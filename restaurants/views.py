@@ -106,7 +106,7 @@ class RestaurantFoodListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         restaurant_id = self.kwargs["restaurant_id"]
         return Food.objects.filter(
-            restaurant__id=restaurant_id, restaurant__user=self.request.user
+            restaurant__restaurant_id=restaurant_id, restaurant__user=self.request.user
         )
 
     def perform_create(self, serializer):

@@ -19,11 +19,6 @@ from orders.views import (
 urlpatterns = [
     # Restaurants
     path("", RestaurantListCreateView.as_view(), name="restaurant-list-create"),
-    path(
-        "<str:pk>/",
-        RestaurantRetrieveUpdateDestroyView.as_view(),
-        name="restaurant-detail",
-    ),
     # Restaurant-specific Riders
     path(
         "<str:restaurant_id>/riders/",
@@ -68,5 +63,10 @@ urlpatterns = [
         "<str:restaurant_id>/riders/<str:rider_code>/",
         RiderRetrieveUpdateDestroyView.as_view(),
         name="restaurant-rider-detail",
+    ),
+    path(
+        "<str:pk>/",
+        RestaurantRetrieveUpdateDestroyView.as_view(),
+        name="restaurant-detail",
     ),
 ]
