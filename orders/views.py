@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 
-from .serializers import OrderSerializer
+from .serilalizers import OrderSerializer
 from .models import Order
 from restaurants.models import Restaurant, Rider
 
