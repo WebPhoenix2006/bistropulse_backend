@@ -200,7 +200,12 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 # =========================
 # CORS
 # =========================
-CORS_ALLOWED_ORIGINS = ["http://localhost:4200", "https://bistropulse.vercel.app"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",  
+    "https://bistropulse.vercel.app",  
+    "http://bistropulse-backend.onrender.com",  # backend URL
+    "https://bistropulse-backend.onrender.com", # in case of https redirect
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers)
 CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
