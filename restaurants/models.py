@@ -73,6 +73,10 @@ class FoodCategory(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def item_count(self):
+        return self.foods.count()
+
 
 class Extra(models.Model):
     name = models.CharField(max_length=100)
@@ -94,9 +98,31 @@ class Food(models.Model):
     price = models.DecimalField(max_digits=8, decimal_places=2)
     image = models.ImageField(upload_to="food_images/", blank=True, null=True)
     extras = models.ManyToManyField(Extra, blank=True, related_name="foods")
+    available = models.BooleanField(default=True)
+
+    # Sizes
+    small_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    medium_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    large_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+    @property
+    def average_rating(self):
+        reviews = self.reviews.all()
+        if reviews.exists():
+            return round(sum(r.rating for r in reviews) / reviews.count(), 1)
+        return 0.0
+
+    @property
+    def total_ratings(self):
+        return self.reviews.count()
+
+    @property
+    def category_name(self):
+        return self.category.name if self.category else None
+
 
 
 class Review(models.Model):

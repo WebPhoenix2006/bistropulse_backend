@@ -28,10 +28,18 @@ class RepresentativeSerializer(serializers.ModelSerializer):
         return None
 
 
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ["id", "user", "comment", "rating", "created_at"]
+
+
 class FoodCategorySerializer(serializers.ModelSerializer):
+    itemCount = serializers.IntegerField(source="item_count", read_only=True)
+
     class Meta:
         model = FoodCategory
-        fields = ["id", "name"]
+        fields = ["id", "name", "itemCount"]
 
 
 class ExtraSerializer(serializers.ModelSerializer):
@@ -42,16 +50,37 @@ class ExtraSerializer(serializers.ModelSerializer):
 
 class FoodSerializer(serializers.ModelSerializer):
     extras = ExtraSerializer(many=True, read_only=True)
+    categoryName = serializers.CharField(source="category_name", read_only=True)
+    averageRating = serializers.FloatField(source="average_rating", read_only=True)
+    totalRatings = serializers.IntegerField(source="total_ratings", read_only=True)
+    reviews = ReviewSerializer(many=True, read_only=True)
+
+    sizes = serializers.SerializerMethodField()
 
     class Meta:
         model = Food
-        fields = ["id", "name", "description", "price", "category", "image", "extras"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "price",
+            "image",
+            "extras",
+            "category",
+            "categoryName",
+            "available",
+            "sizes",
+            "averageRating",
+            "totalRatings",
+            "reviews",
+        ]
 
-
-class ReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Review
-        fields = ["id", "user", "comment", "rating", "created_at"]
+    def get_sizes(self, obj):
+        return {
+            "smallPrice": obj.small_price,
+            "mediumPrice": obj.medium_price,
+            "largePrice": obj.large_price,
+        }
 
 
 class RiderSerializer(serializers.ModelSerializer):

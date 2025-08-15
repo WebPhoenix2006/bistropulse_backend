@@ -134,7 +134,7 @@ class RestaurantCategoryFoodCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, restaurant_id):
-        restaurant = get_object_or_404(Restaurant, id=restaurant_id, user=request.user)
+        restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id, user=request.user)
 
         category_name = request.data.get("category_name")
         food_data = request.data.get("food")
