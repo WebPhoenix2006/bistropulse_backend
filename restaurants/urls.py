@@ -6,7 +6,6 @@ from .views import (
     FoodCategoryListCreateView,
     FoodListCreateView,
     ExtraListCreateView,
-    RestaurantFoodListCreateView,
     RiderListCreateView,
     RiderRetrieveUpdateDestroyView,
 )
@@ -24,6 +23,11 @@ urlpatterns = [
         "<str:restaurant_id>/riders/",
         RiderListCreateView.as_view(),
         name="restaurant-riders",
+    ),
+    path(
+        "<str:restaurant_id>/riders/<str:rider_code>/",
+        RiderRetrieveUpdateDestroyView.as_view(),
+        name="restaurant-rider-detail",
     ),
     # Restaurant-specific Orders
     path(
@@ -43,15 +47,18 @@ urlpatterns = [
     ),
     # Food Categories
     path(
-        "<str:restaurant_id>/food-categories/", FoodCategoryListCreateView.as_view(), name="food-categories"
+        "<str:restaurant_id>/food-categories/",
+        FoodCategoryListCreateView.as_view(),
+        name="food-categories",
     ),
-    # Foods (global and restaurant-specific)
+    # Foods — global and restaurant-specific (handled by same view)
     path("foods/", FoodListCreateView.as_view(), name="foods"),
     path(
         "<str:restaurant_id>/foods/",
-        RestaurantFoodListCreateView.as_view(),
+        FoodListCreateView.as_view(),
         name="restaurant-foods",
     ),
+    # Restaurant category-based food creation
     path(
         "<str:restaurant_id>/category-food/",
         RestaurantCategoryFoodCreateView.as_view(),
@@ -59,11 +66,7 @@ urlpatterns = [
     ),
     # Extras
     path("extras/", ExtraListCreateView.as_view(), name="extras"),
-    path(
-        "<str:restaurant_id>/riders/<str:rider_code>/",
-        RiderRetrieveUpdateDestroyView.as_view(),
-        name="restaurant-rider-detail",
-    ),
+    # Restaurant detail
     path(
         "<str:pk>/",
         RestaurantRetrieveUpdateDestroyView.as_view(),

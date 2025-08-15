@@ -54,8 +54,12 @@ class FoodSerializer(serializers.ModelSerializer):
     averageRating = serializers.FloatField(source="average_rating", read_only=True)
     totalRatings = serializers.IntegerField(source="total_ratings", read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
-
     sizes = serializers.SerializerMethodField()
+
+    # Allow setting restaurant manually if global endpoint is used
+    restaurant = serializers.SlugRelatedField(
+        queryset=Restaurant.objects.all(), slug_field="restaurant_id", required=False
+    )
 
     class Meta:
         model = Food
@@ -73,7 +77,11 @@ class FoodSerializer(serializers.ModelSerializer):
             "averageRating",
             "totalRatings",
             "reviews",
+            "restaurant",  # added so global POST can link to a restaurant if wanted
         ]
+        read_only_fields = [
+            "restaurant"
+        ]  # will still be auto-set in restaurant endpoint
 
     def get_sizes(self, obj):
         return {
@@ -86,8 +94,6 @@ class FoodSerializer(serializers.ModelSerializer):
 class RiderSerializer(serializers.ModelSerializer):
     profile_image = serializers.ImageField(required=False)
     profile_image_url = serializers.SerializerMethodField()
-
-    # Use SlugRelatedField for restaurant to match custom PK
     restaurant = serializers.SlugRelatedField(
         queryset=Restaurant.objects.all(), slug_field="restaurant_id"
     )
@@ -176,7 +182,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = [
-            "restaurant_id",  # custom PK
+            "restaurant_id",
             "name",
             "representative",
             "phone",

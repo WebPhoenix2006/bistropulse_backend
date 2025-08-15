@@ -86,32 +86,31 @@ class FoodCategoryListCreateView(generics.ListCreateAPIView):
 class FoodListCreateView(generics.ListCreateAPIView):
     serializer_class = FoodSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Food.objects.filter(restaurant__user=self.request.user)
-
-    def perform_create(self, serializer):
-        restaurant_id = self.request.data.get("restaurant")
-        serializer.save(restaurant_id=restaurant_id)
-
-    def get_serializer_context(self):
-        return {"request": self.request}
-
-
-class RestaurantFoodListCreateView(generics.ListCreateAPIView):
-    serializer_class = FoodSerializer
-    permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
-        restaurant_id = self.kwargs["restaurant_id"]
-        return Food.objects.filter(
-            restaurant__restaurant_id=restaurant_id, restaurant__user=self.request.user
-        )
+        restaurant_id = self.kwargs.get("restaurant_id")
+        queryset = Food.objects.filter(restaurant__user=self.request.user)
+        if restaurant_id:
+            queryset = queryset.filter(restaurant__restaurant_id=restaurant_id)
+        return queryset
 
     def perform_create(self, serializer):
-        restaurant_id = self.kwargs["restaurant_id"]
-        serializer.save(restaurant_id=restaurant_id)
+        restaurant_id = self.kwargs.get("restaurant_id")
+        if restaurant_id:
+            restaurant = get_object_or_404(
+                Restaurant, restaurant_id=restaurant_id, user=self.request.user
+            )
+            serializer.save(restaurant=restaurant)
+        else:
+            restaurant_id_from_data = self.request.data.get("restaurant")
+            if restaurant_id_from_data:
+                restaurant = get_object_or_404(
+                    Restaurant, id=restaurant_id_from_data, user=self.request.user
+                )
+                serializer.save(restaurant=restaurant)
+            else:
+                serializer.save()  # Global food
 
     def get_serializer_context(self):
         return {"request": self.request}
@@ -134,7 +133,9 @@ class RestaurantCategoryFoodCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, restaurant_id):
-        restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id, user=request.user)
+        restaurant = get_object_or_404(
+            Restaurant, restaurant_id=restaurant_id, user=request.user
+        )
 
         category_name = request.data.get("category_name")
         food_data = request.data.get("food")
