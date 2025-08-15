@@ -43,7 +43,7 @@ urlpatterns = [
     ),
     # Food Categories
     path(
-        "food-categories/", FoodCategoryListCreateView.as_view(), name="food-categories"
+        "<str:restaurant_id>food-categories/", FoodCategoryListCreateView.as_view(), name="food-categories"
     ),
     # Foods (global and restaurant-specific)
     path("foods/", FoodListCreateView.as_view(), name="foods"),
