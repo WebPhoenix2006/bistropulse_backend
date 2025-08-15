@@ -1,11 +1,10 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, status, serializers
+from rest_framework import generics, permissions, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.utils import timezone
-from django.conf import settings
 
 from .models import (
     Restaurant,
@@ -27,7 +26,7 @@ from .serializers import (
 )
 
 
-# 🔒 Helper: Force HTTPS for any URL in response data
+# 🔒 Force HTTPS in all response URLs
 def enforce_https_in_response(data):
     if isinstance(data, dict):
         for key, value in data.items():
@@ -41,6 +40,7 @@ def enforce_https_in_response(data):
     return data
 
 
+# ---------------- RESTAURANTS ----------------
 class RestaurantListCreateView(generics.ListCreateAPIView):
     serializer_class = RestaurantSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -68,75 +68,90 @@ class RestaurantRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView)
         return {"request": self.request}
 
 
+# ---------------- FOOD CATEGORIES ----------------
 class FoodCategoryListCreateView(generics.ListCreateAPIView):
     serializer_class = FoodCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return FoodCategory.objects.filter(restaurant__user=self.request.user)
+        qs = FoodCategory.objects.filter(restaurant__user=self.request.user)
+        restaurant_id = self.kwargs.get("restaurant_id")
+        if restaurant_id:
+            qs = qs.filter(restaurant__restaurant_id=restaurant_id)
+        return qs
 
     def perform_create(self, serializer):
-        restaurant_id = self.request.data.get("restaurant_id")
-        serializer.save(restaurant_id=restaurant_id)
+        restaurant_id = self.kwargs.get("restaurant_id") or self.request.data.get(
+            "restaurant"
+        )
+        restaurant = get_object_or_404(
+            Restaurant, restaurant_id=restaurant_id, user=self.request.user
+        )
+        serializer.save(restaurant=restaurant)
 
     def get_serializer_context(self):
         return {"request": self.request}
 
 
+class FoodCategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = FoodCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = "pk"
+
+    def get_queryset(self):
+        return FoodCategory.objects.filter(restaurant__user=self.request.user)
+
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+
+# ---------------- FOODS ----------------
 class FoodListCreateView(generics.ListCreateAPIView):
     serializer_class = FoodSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
+        qs = Food.objects.filter(restaurant__user=self.request.user)
         restaurant_id = self.kwargs.get("restaurant_id")
-        queryset = Food.objects.filter(restaurant__user=self.request.user)
         if restaurant_id:
-            queryset = queryset.filter(restaurant__restaurant_id=restaurant_id)
-        return queryset
+            qs = qs.filter(restaurant__restaurant_id=restaurant_id)
+        return qs
 
     def perform_create(self, serializer):
-        restaurant_id = self.kwargs.get("restaurant_id")
-        if restaurant_id:
-            restaurant = get_object_or_404(
-                Restaurant, restaurant_id=restaurant_id, user=self.request.user
-            )
-            serializer.save(restaurant=restaurant)
-        else:
-            restaurant_id_from_data = self.request.data.get("restaurant")
-            if restaurant_id_from_data:
-                restaurant = get_object_or_404(
-                    Restaurant, id=restaurant_id_from_data, user=self.request.user
-                )
-                serializer.save(restaurant=restaurant)
-            else:
-                serializer.save()  # Global food
+        restaurant_id = self.kwargs.get("restaurant_id") or self.request.data.get(
+            "restaurant"
+        )
+        restaurant = get_object_or_404(
+            Restaurant, restaurant_id=restaurant_id, user=self.request.user
+        )
+        serializer.save(restaurant=restaurant)
 
     def get_serializer_context(self):
         return {"request": self.request}
 
 
-class RestaurantCategoryFoodCreateView(APIView):
-    """
-    Create a FoodCategory and Food in a single request for a given restaurant.
-    Expected payload:
-    {
-        "category_name": "Burgers",
-        "food": {
-            "name": "Cheese Burger",
-            "description": "Juicy beef patty with cheese",
-            "price": 2500
-        }
-    }
-    """
+class FoodRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = FoodSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    lookup_field = "pk"
 
+    def get_queryset(self):
+        return Food.objects.filter(restaurant__user=self.request.user)
+
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+
+# ---------------- CATEGORY + FOOD IN ONE GO ----------------
+class RestaurantCategoryFoodCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, restaurant_id):
         restaurant = get_object_or_404(
             Restaurant, restaurant_id=restaurant_id, user=request.user
         )
-
         category_name = request.data.get("category_name")
         food_data = request.data.get("food")
 
@@ -149,7 +164,6 @@ class RestaurantCategoryFoodCreateView(APIView):
         category = FoodCategory.objects.create(
             restaurant=restaurant, name=category_name
         )
-
         food = Food.objects.create(
             restaurant=restaurant,
             category=category,
@@ -164,12 +178,12 @@ class RestaurantCategoryFoodCreateView(APIView):
             ).data,
             "food": FoodSerializer(food, context={"request": request}).data,
         }
-
         return Response(
             enforce_https_in_response(response_data), status=status.HTTP_201_CREATED
         )
 
 
+# ---------------- EXTRAS ----------------
 class ExtraListCreateView(generics.ListCreateAPIView):
     queryset = Extra.objects.all()
     serializer_class = ExtraSerializer
@@ -179,35 +193,27 @@ class ExtraListCreateView(generics.ListCreateAPIView):
         return {"request": self.request}
 
 
+# ---------------- RIDERS ----------------
 class RiderListCreateView(generics.ListCreateAPIView):
     serializer_class = RiderSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
+        qs = Rider.objects.filter(restaurant__user=self.request.user)
         restaurant_id = self.kwargs.get("restaurant_id")
         if restaurant_id:
-            return Rider.objects.filter(
-                restaurant__id=restaurant_id, restaurant__user=self.request.user
-            )
-        return Rider.objects.filter(restaurant__user=self.request.user)
+            qs = qs.filter(restaurant__restaurant_id=restaurant_id)
+        return qs
 
     def perform_create(self, serializer):
-        restaurant_id = self.kwargs.get("restaurant_id")
-        if restaurant_id:
-            restaurant = Restaurant.objects.filter(
-                restaurant_id=restaurant_id, user=self.request.user
-            ).first()
-            if not restaurant:
-                raise serializers.ValidationError(
-                    {
-                        "restaurant": f'Invalid restaurant ID "{restaurant_id}" - object does not exist.'
-                    }
-                )
-            serializer.validated_data.pop("restaurant", None)
-            serializer.save(restaurant=restaurant)
-        else:
-            serializer.save()
+        restaurant_id = self.kwargs.get("restaurant_id") or self.request.data.get(
+            "restaurant"
+        )
+        restaurant = get_object_or_404(
+            Restaurant, restaurant_id=restaurant_id, user=self.request.user
+        )
+        serializer.save(restaurant=restaurant)
 
     def get_serializer_context(self):
         return {"request": self.request}
@@ -226,49 +232,12 @@ class RiderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return {"request": self.request}
 
 
-class RestaurantRiderListView(generics.ListCreateAPIView):
-    serializer_class = RiderSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
-
-    def get_queryset(self):
-        restaurant_id = self.kwargs.get("restaurant_id")
-        return Rider.objects.filter(
-            restaurant__id=restaurant_id, restaurant__user=self.request.user
-        )
-
-    def perform_create(self, serializer):
-        restaurant_id = self.kwargs.get("restaurant_id")
-        restaurant = Restaurant.objects.filter(
-            restaurant_id=restaurant_id, user=self.request.user
-        ).first()
-        if not restaurant:
-            raise serializers.ValidationError(
-                {
-                    "restaurant": f'Invalid restaurant ID "{restaurant_id}" - object does not exist.'
-                }
-            )
-
-        serializer.validated_data.pop("restaurant", None)
-        serializer.save(restaurant=restaurant)
-
-    def get_serializer_context(self):
-        return {"request": self.request}
-
-
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def toggle_rider_active_status(request, pk):
-    try:
-        rider = Rider.objects.get(pk=pk, restaurant__user=request.user)
-    except Rider.DoesNotExist:
-        return Response(
-            {"detail": "Rider not found."}, status=status.HTTP_404_NOT_FOUND
-        )
-
+    rider = get_object_or_404(Rider, pk=pk, restaurant__user=request.user)
     rider.is_active = not rider.is_active
     rider.save()
-
     return Response(
         {
             "id": rider.id,
@@ -280,6 +249,7 @@ def toggle_rider_active_status(request, pk):
     )
 
 
+# ---------------- SHIFTS ----------------
 class ShiftTypeListCreateView(generics.ListCreateAPIView):
     queryset = ShiftType.objects.all()
     serializer_class = ShiftTypeSerializer
@@ -305,13 +275,8 @@ class StartRiderShiftView(APIView):
 
     def post(self, request, rider_id):
         shift_type_id = request.data.get("shift_type_id")
-
-        try:
-            rider = Rider.objects.get(id=rider_id, restaurant__user=request.user)
-            shift_type = ShiftType.objects.get(id=shift_type_id)
-        except (Rider.DoesNotExist, ShiftType.DoesNotExist):
-            return Response({"detail": "Rider or shift type not found."}, status=404)
-
+        rider = get_object_or_404(Rider, id=rider_id, restaurant__user=request.user)
+        shift_type = get_object_or_404(ShiftType, id=shift_type_id)
         shift = RiderShift.objects.create(
             rider=rider, shift_type=shift_type, started_by=request.user
         )
@@ -324,11 +289,9 @@ class EndRiderShiftView(APIView):
 
     def post(self, request, pk):
         secret_code = request.data.get("secret_code")
-
-        try:
-            shift = RiderShift.objects.get(id=pk, rider__restaurant__user=request.user)
-        except RiderShift.DoesNotExist:
-            return Response({"detail": "Shift not found."}, status=404)
+        shift = get_object_or_404(
+            RiderShift, id=pk, rider__restaurant__user=request.user
+        )
 
         if shift.status != "started":
             return Response({"detail": "Shift already ended or cancelled."}, status=400)

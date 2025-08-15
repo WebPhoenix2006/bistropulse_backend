@@ -8,6 +8,11 @@ from .views import (
     ExtraListCreateView,
     RiderListCreateView,
     RiderRetrieveUpdateDestroyView,
+    toggle_rider_active_status,
+    ShiftTypeListCreateView,
+    RiderShiftListView,
+    StartRiderShiftView,
+    EndRiderShiftView,
 )
 from orders.views import (
     OrderListCreateView,
@@ -16,9 +21,14 @@ from orders.views import (
 )
 
 urlpatterns = [
-    # Restaurants
+    # ---------------- RESTAURANTS ----------------
     path("", RestaurantListCreateView.as_view(), name="restaurant-list-create"),
-    # Restaurant-specific Riders
+    path(
+        "<str:pk>/",
+        RestaurantRetrieveUpdateDestroyView.as_view(),
+        name="restaurant-detail",
+    ),
+    # ---------------- RIDERS ----------------
     path(
         "<str:restaurant_id>/riders/",
         RiderListCreateView.as_view(),
@@ -29,7 +39,12 @@ urlpatterns = [
         RiderRetrieveUpdateDestroyView.as_view(),
         name="restaurant-rider-detail",
     ),
-    # Restaurant-specific Orders
+    path(
+        "riders/<int:pk>/toggle-active/",
+        toggle_rider_active_status,
+        name="toggle-rider-active",
+    ),
+    # ---------------- ORDERS ----------------
     path(
         "<str:restaurant_id>/orders/",
         OrderListCreateView.as_view(),
@@ -45,31 +60,36 @@ urlpatterns = [
         RiderOrderCreateView.as_view(),
         name="create-rider-order",
     ),
-    # Food Categories
+    # ---------------- FOOD CATEGORIES ----------------
     path(
         "<str:restaurant_id>/food-categories/",
         FoodCategoryListCreateView.as_view(),
         name="food-categories",
     ),
-    # Foods — global and restaurant-specific (handled by same view)
+    # ---------------- FOODS ----------------
     path("foods/", FoodListCreateView.as_view(), name="foods"),
     path(
         "<str:restaurant_id>/foods/",
         FoodListCreateView.as_view(),
         name="restaurant-foods",
     ),
-    # Restaurant category-based food creation
+    # ---------------- CATEGORY + FOOD IN ONE ----------------
     path(
         "<str:restaurant_id>/category-food/",
         RestaurantCategoryFoodCreateView.as_view(),
         name="restaurant-category-food-create",
     ),
-    # Extras
+    # ---------------- EXTRAS ----------------
     path("extras/", ExtraListCreateView.as_view(), name="extras"),
-    # Restaurant detail
+    # ---------------- SHIFTS ----------------
+    path("shift-types/", ShiftTypeListCreateView.as_view(), name="shift-types"),
+    path("rider-shifts/", RiderShiftListView.as_view(), name="rider-shifts"),
     path(
-        "<str:pk>/",
-        RestaurantRetrieveUpdateDestroyView.as_view(),
-        name="restaurant-detail",
+        "rider/<int:rider_id>/start-shift/",
+        StartRiderShiftView.as_view(),
+        name="start-rider-shift",
+    ),
+    path(
+        "rider-shift/<int:pk>/end/", EndRiderShiftView.as_view(), name="end-rider-shift"
     ),
 ]
