@@ -2,12 +2,32 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from .serilalizers import OrderSerializer
 from .models import Order
 from restaurants.models import Restaurant, Rider
 
 
+# =========================
+# Helper function to broadcast order changes
+# =========================
+def broadcast_order_update(order, action="update"):
+    channel_layer = get_channel_layer()
+    group_name = f"order_{order.order_id}"
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            "type": "send_order_update",
+            "data": {"action": action, "order": OrderSerializer(order).data},
+        },
+    )
+
+
+# =========================
+# Orders List / Create
+# =========================
 class OrderListCreateView(generics.ListCreateAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -39,9 +59,13 @@ class OrderListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         if user.role not in ["manager", "admin"]:
             raise PermissionDenied("Only managers or admins can create orders.")
-        serializer.save()
+        order = serializer.save()
+        broadcast_order_update(order, action="create")
 
 
+# =========================
+# Orders Retrieve / Update / Delete
+# =========================
 class OrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -69,7 +93,18 @@ class OrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         else:
             raise PermissionDenied("You do not have permission to access this order.")
 
+    def perform_update(self, serializer):
+        order = serializer.save()
+        broadcast_order_update(order, action="update")
 
+    def perform_destroy(self, instance):
+        broadcast_order_update(instance, action="delete")
+        instance.delete()
+
+
+# =========================
+# Restaurant Orders
+# =========================
 class RestaurantOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -98,7 +133,18 @@ class RestaurantOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPI
         else:
             raise PermissionDenied("You do not have permission to manage this order.")
 
+    def perform_update(self, serializer):
+        order = serializer.save()
+        broadcast_order_update(order, action="update")
 
+    def perform_destroy(self, instance):
+        broadcast_order_update(instance, action="delete")
+        instance.delete()
+
+
+# =========================
+# Rider Orders List
+# =========================
 class RiderOrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -127,6 +173,9 @@ class RiderOrderListView(generics.ListAPIView):
         )
 
 
+# =========================
+# Rider Orders Create
+# =========================
 class RiderOrderCreateView(generics.CreateAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -152,9 +201,13 @@ class RiderOrderCreateView(generics.CreateAPIView):
         if rider.restaurant.restaurant_id != restaurant.restaurant_id:
             raise PermissionDenied("This rider does not belong to your restaurant.")
 
-        serializer.save(restaurant=restaurant, rider=rider)
+        order = serializer.save(restaurant=restaurant, rider=rider)
+        broadcast_order_update(order, action="create")
 
 
+# =========================
+# Rider Orders Retrieve / Update / Delete
+# =========================
 class RiderOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -176,3 +229,11 @@ class RiderOrderRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView)
             return Order.objects.filter(rider__rider_code=rider.rider_code)
 
         raise PermissionDenied("You do not have permission to manage this order.")
+
+    def perform_update(self, serializer):
+        order = serializer.save()
+        broadcast_order_update(order, action="update")
+
+    def perform_destroy(self, instance):
+        broadcast_order_update(instance, action="delete")
+        instance.delete()
