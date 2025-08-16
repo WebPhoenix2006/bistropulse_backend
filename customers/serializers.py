@@ -3,7 +3,8 @@ from rest_framework import serializers
 from .models import Customer
 
 class CustomerSerializer(serializers.ModelSerializer):
-    photo_url = serializers.SerializerMethodField(read_only=True)
+    photo = serializers.ImageField(required=False)
+    photo_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Customer
@@ -26,18 +27,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         # Create the customer instance
         customer = Customer.objects.create(user=user, **validated_data)
         
-        # Debugging information
-        if customer.photo:
-            print("\n=== FILE UPLOAD DEBUGGING ===")
-            print("✅ File path:", customer.photo.path)
-            print("✅ File exists:", os.path.exists(customer.photo.path))
-            print("✅ File URL:", customer.photo.url)
-            if request:
-                print("✅ Absolute URL:", request.build_absolute_uri(customer.photo.url))
-            else:
-                print("⚠️ No request in context for absolute URL")
-        else:
-            print("⚠️ No photo was saved with this customer")
+       
         
         return customer
 
